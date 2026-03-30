@@ -43,7 +43,7 @@
 
                 if (dados.erro === false) {
                     document.getElementById('form-area').style.display = 'none';
-                    document.getElementById('mensagem').innerHTML = "<b>Sucesso!</b> Senha alterada. <a href='/login'>Ir para Login</a>";
+                    document.getElementById('mensagem').innerHTML = "<b>Sucesso!</b> Senha alterada. <a href='http://localhost/unesdobrasil/cms/login.html'>Ir para Login</a>";
                 } else {
                     document.getElementById('mensagem').innerText = "Erro: " + dados.message;
                     btn.disabled = false;

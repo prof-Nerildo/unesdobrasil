@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>UNES - Login</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .login-card { background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        h2 { text-align: center; color: #333; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #0056b3; }
+        .error { color: red; font-size: 14px; text-align: center; margin-top: 10px; }
+        .links { text-align: center; margin-top: 15px; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+<div class="login-card">
+    <h2>Acesso UNES</h2>
+    <input type="text" id="login" placeholder="E-mail ou Usuário">
+    <input type="password" id="senha" placeholder="Sua Senha">
+    <button onclick="fazerLogin()">ENTRAR</button>
+    <div id="mensagem" class="error"></div>
+    
+    <div class="links">
+        <a href="esqueci-senha.html">Esqueci minha senha</a>
+    </div>
+</div>
+
+<script src="js/api.js"></script>
+<script>
+    async function fazerLogin() {
+        const msg = document.getElementById('mensagem');
+        const loginVal = document.getElementById('login').value;
+        const senhaVal = document.getElementById('senha').value;
+
+        if(!loginVal || !senhaVal) {
+            msg.innerText = "Preencha todos os campos.";
+            return;
+        }
+
+        const dados = { login: loginVal, senha: senhaVal };
+
+        // Chama a rota de login que ajustamos no UsuarioController
+        const res = await chamarApi('/account/login', 'POST', dados);
+
+        if (!res.erro) {
+            // SALVA O TOKEN: Importante para o Dashboard ler depois
+            localStorage.setItem('token_unes', res.token);
+            // Redireciona para o Dashboard
+            window.location.href = 'dashboard.html';
+        } else {
+            msg.innerText = res.message;
+        }
+    }
+
+    // Permitir dar Enter para logar
+    document.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') fazerLogin();
+    });
+</script>
+</body>
+</html>

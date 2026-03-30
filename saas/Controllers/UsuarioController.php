@@ -7,7 +7,7 @@ use Models\LoginRequestModelUsuario;
 use Models\ChangePasswordRequestModelUsuario;
 use Repositories\UsuarioRepository;
 use Dependencies\JwtHandler;
-use Dependencies\EmailHandler; // <-- Importado
+use Dependencies\EmailHandler;
 use Exception;
 
 class UsuarioController {
@@ -31,12 +31,12 @@ class UsuarioController {
     }
 
     private function computerSha256Hash($rawData) {
-        return hash('sha256', $rawData);
+        return hash('sha256', $rawData ?? '');
     }
 
     private function montarStringCriptografia($senha, $identificadorUnico) {
-        $passSHA256 = $this->computerSha256Hash($senha);
-        $idSHA256 = $this->computerSha256Hash($identificadorUnico);
+        $passSHA256 = $this->computerSha256Hash($senha ?? '');
+        $idSHA256 = $this->computerSha256Hash($identificadorUnico ?? '');
         return $passSHA256 . $this->apiKey . $idSHA256;
     }
 
@@ -97,7 +97,11 @@ class UsuarioController {
                 "erro" => false,
                 "message" => "Login realizado com sucesso!",
                 "token" => $token,
-                "usuario" => ["id" => $user->getIdUsuario(), "nome" => $user->getPrimeiroNome(), "nivelAcesso" => $user->getIdAcl()]
+                "usuario" => [
+                    "id" => $user->getIdUsuario(), 
+                    "nome" => $user->getPrimeiroNome(), 
+                    "nivelAcesso" => $user->getIdAcl()
+                ]
             ]);
         } catch (Exception $ex) {
             http_response_code(500);
@@ -106,42 +110,61 @@ class UsuarioController {
     }
 
     public function getMe($userLogado) {
-        $tipos = [1 => "Sistema", 2 => "UNES", 3 => "Instituição", 4 => "Aluno"];
-        return json_encode([
-            "erro" => false,
-            "dados" => [
-                "id" => $userLogado['id'],
-                "nome" => $userLogado['nome'],
-                "email" => $userLogado['email'],
-                "nivelAcesso" => $userLogado['idAcl'],
-                "tipoDescricao" => $tipos[$userLogado['idAcl']] ?? "Outros"
-            ]
-        ]);
-    }
-
-    public function changePassword($dadosJson, $userLogado = null) {
         try {
-            $novaSenha = $dadosJson['novaSenha'] ?? '';
-            $email = $userLogado['email'] ?? $dadosJson['email'] ?? '';
-
-            if (empty($novaSenha) || empty($email)) {
-                throw new Exception("Dados insuficientes para a troca.", 400);
+            $dadosCompletos = $this->repositoryUsuario->findMe($userLogado['id']);
+            
+            if (!$dadosCompletos) {
+                throw new Exception("Usuário não localizado no banco.");
             }
 
+            return json_encode([
+                "erro" => false,
+                "dados" => $dadosCompletos
+            ]);
+        } catch (Exception $ex) {
+            http_response_code(404);
+            return json_encode(["erro" => true, "message" => $ex->getMessage()]);
+        }
+    }
+
+    /**
+     * MÉTODO: Alterar Senha
+     * Ajustado para suportar Troca Logada e Recuperação (Esqueci Senha)
+     */
+    public function changePassword($dadosJson, $userLogado) {
+        try {
+            $novaSenha = $dadosJson['novaSenha'] ?? '';
+            $email = $userLogado['email'];
+
+            // 1. Verifica se o token é de recuperação (não exige senha atual)
+            $isRecuperacao = ($userLogado['tipo'] ?? '') === 'recuperacao';
+
+            $user = $this->repositoryUsuario->findByLogin($email);
+            if (!$user) throw new Exception("Usuário não encontrado.");
+
+            // 2. Se não for recuperação, valida a senha atual por segurança
+            if (!$isRecuperacao) {
+                $senhaAtual = $dadosJson['senhaAtual'] ?? '';
+                if (!password_verify($this->montarStringCriptografia($senhaAtual, $email), $user->getSenha())) {
+                    throw new Exception("A senha atual informada está incorreta.", 401);
+                }
+            }
+
+            // 3. Criptografa e salva a nova senha
             $novaSenhaHash = password_hash($this->montarStringCriptografia($novaSenha, $email), PASSWORD_BCRYPT);
             $sucesso = $this->repositoryUsuario->updateSenha($email, $novaSenhaHash);
 
-            return json_encode(["erro" => !$sucesso, "message" => $sucesso ? "Senha alterada com sucesso!" : "Erro ao atualizar banco."]);
+            return json_encode([
+                "erro" => !$sucesso, 
+                "message" => $sucesso ? "Senha alterada com sucesso!" : "Erro ao atualizar banco."
+            ]);
         } catch (Exception $ex) {
             http_response_code($ex->getCode() ?: 500);
             return json_encode(["erro" => true, "message" => $ex->getMessage()]);
         }
     }
 
-    /**
-     * MÉTODO: Esqueci minha senha (Agora com envio de E-mail)
-     */
-    public function forgotPassword($dadosJson) {
+   public function forgotPassword($dadosJson) {
         try {
             $login = $dadosJson['login'] ?? '';
             if (empty($login)) {
@@ -151,38 +174,32 @@ class UsuarioController {
 
             $user = $this->repositoryUsuario->findByLogin($login);
 
-            // Resposta genérica por segurança
-            $respostaPadrao = json_encode(["erro" => false, "message" => "Se o usuário existir, as instruções foram enviadas para o e-mail cadastrado."]);
-
             if ($user) {
+                $emailDestino = $user->getEmail();
+                $nomeDestino = $user->getPrimeiroNome();
+
                 $recoveryData = [
                     "id" => $user->getIdUsuario(),
-                    "email" => $user->getEmail(),
-                    "idAcl" => $user->getIdAcl(),
+                    "email" => $emailDestino,
                     "tipo" => "recuperacao"
                 ];
                 
                 $tokenRecuperacao = $this->jwt->generate($recoveryData); 
-
-                // Tenta enviar o e-mail real
                 $emailHandler = new EmailHandler();
-                $enviou = $emailHandler->enviarRecuperacao($user->getEmail(), $user->getPrimeiroNome(), $tokenRecuperacao);
+                $enviou = $emailHandler->enviarRecuperacao($emailDestino, $nomeDestino, $tokenRecuperacao);
 
                 if (!$enviou) {
-                    // Se o e-mail falhar (SMTP fora do ar), avisamos no debug para você não ficar travado
-                    return json_encode([
-                        "erro" => false, 
-                        "message" => "Instruções geradas (Falha no envio SMTP)",
-                        "debug_token" => $tokenRecuperacao 
-                    ]);
+                     return json_encode(["erro" => true, "message" => "O servidor de e-mail recusou o envio. Tente novamente mais tarde."]);
                 }
+
+                return json_encode(["erro" => false, "message" => "Instruções enviadas com sucesso para o seu e-mail!"]);
             }
 
-            return $respostaPadrao;
+            return json_encode(["erro" => false, "message" => "Se o usuário existir, as instruções foram enviadas."]);
 
         } catch (Exception $ex) {
             http_response_code(500);
-            return json_encode(["erro" => true, "message" => "Erro ao processar solicitação"]);
+            return json_encode(["erro" => true, "message" => $ex->getMessage()]);
         }
     }
 }

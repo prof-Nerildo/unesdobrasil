@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>UNES - Dashboard</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; display: flex; }
+        .sidebar { width: 250px; height: 100vh; background: #343a40; color: white; padding: 20px; }
+        .content { flex: 1; padding: 40px; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .btn-logout { background: #dc3545; color: white; border: none; padding: 10px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <h2>UNES SaaS</h2>
+    <p id="user-role">Carregando...</p>
+    <hr>
+    <button class="btn-logout" onclick="logout()">Sair</button>
+</div>
+
+<div class="content">
+    <div class="card">
+        <h1>Bem-vindo, <span id="user-name">...</span>!</h1>
+        <p><strong>Instituição:</strong> <span id="inst-name">Nenhuma vinculada</span></p>
+        <p><strong>Cargo:</strong> <span id="user-cargo">...</span></p>
+    </div>
+</div>
+
+<script src="js/api.js"></script>
+<script>
+    async function carregarDashboard() {
+        const res = await chamarApi('/account/me', 'GET'); // Chama a rota protegida
+        if (!res.erro) {
+            document.getElementById('user-name').innerText = res.usuario.primeiro_nome;
+            document.getElementById('user-role').innerText = res.usuario.nivel_acesso;
+            document.getElementById('user-cargo').innerText = res.usuario.cargo;
+            document.getElementById('inst-name').innerText = res.usuario.instituicao || "Administrador Geral";
+        } else {
+            window.location.href = 'login.html'; // Se der erro no token, volta pro login
+        }
+    }
+
+    function logout() {
+        localStorage.removeItem('token_unes'); // Limpa o token
+        window.location.href = 'login.html';
+    }
+
+    carregarDashboard();
+</script>
+</body>
+</html>

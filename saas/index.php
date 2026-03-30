@@ -1,4 +1,8 @@
 <?php
+// Silenciar avisos de depreciação e alertas que sujam o JSON
+error_reporting(E_ALL & ~E_DEPRECATED & ~E_NOTICE & ~E_WARNING);
+ini_set('display_errors', 0); 
+
 // 1. Cabeçalhos (CORS e JSON)
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
@@ -88,25 +92,19 @@ try {
         })(),
 
         // --- INSTITUIÇÃO DE ENSINO ---
-        
-        // Registrar Instituição (Pública para o fluxo de cadastro inicial do CMS)
-        // O vínculo é feito pelo 'idUsuarioDono' que enviamos no JSON
         $method === 'POST' && str_contains($uri, '/api/instituicao/registrar') => 
             $instController->registrar($dadosJson),
 
-        // Validar Instituição (Apenas Admin UNES - idAcl 2)
         $method === 'PUT' && str_contains($uri, '/api/instituicao/validar') => (function() use ($validarToken, $instController, $dadosJson) {
             $user = $validarToken(2); 
             return $instController->validar($dadosJson, $user);
         })(),
 
-        // Listar Pendentes (Apenas Admin UNES - idAcl 2)
         $method === 'GET' && str_contains($uri, '/api/instituicao/pendentes') => (function() use ($validarToken, $instController) {
             $user = $validarToken(2);
             return $instController->listarPendentes($user);
         })(),
 
-        // --- ALUNO (Nível 4) ---
         $method === 'GET' && str_contains($uri, '/api/student/grades') => (function() use ($validarToken) {
             $validarToken(4); 
             return json_encode(["erro" => false, "message" => "Notas do aluno liberadas."]);
