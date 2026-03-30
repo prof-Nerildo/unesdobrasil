@@ -55,3 +55,26 @@ http://localhost/unesdobrasil/saas/index.php/api/account/forgot-password
   "message": "Instruções geradas (Falha no envio SMTP)",
   "debug_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MiwiZW1haWwiOiJhdGVuZGltZW50b0B3ZWJkbmEuY29tLmJyIiwiaWRBY2wiOjIsInRpcG8iOiJyZWN1cGVyYWNhbyIsImlhdCI6MTc3NDgyMzE5MCwiZXhwIjoxNzc0ODUxOTkwfQ.KhM-T3etNS_8E3IzZiNn7wYpNrFl1CV66bV6K6jMnhg"
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

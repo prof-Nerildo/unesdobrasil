@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>UNES - Cadastro</title>
+    <style>
+        body { font-family: sans-serif; background: #f4f4f4; padding: 40px; }
+        .card { background: white; max-width: 600px; margin: auto; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .step { display: none; }
+        .active { display: block; }
+        input, select { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; background: #28a745; color: white; border: none; cursor: pointer; font-weight: bold; }
+        .msg { color: red; margin-top: 10px; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div id="passo1" class="step active">
+        <h2>Passo 1: Administrador</h2>
+        <input type="text" id="p_nome" placeholder="Primeiro Nome">
+        <input type="text" id="s_nome" placeholder="Sobrenome">
+        <input type="text" id="user" placeholder="Usuário">
+        <input type="email" id="email" placeholder="E-mail">
+        <input type="password" id="pass" placeholder="Senha">
+        <input type="text" id="cel" placeholder="Celular">
+        <button onclick="proximo()">PRÓXIMO</button>
+        <div id="err1" class="msg"></div>
+    </div>
+
+    <div id="passo2" class="step">
+        <h2>Passo 2: Instituição</h2>
+        <input type="text" id="razao" placeholder="Razão Social">
+        <input type="text" id="cnpj" placeholder="CNPJ">
+        <input type="text" id="cep" placeholder="CEP">
+        <input type="text" id="rua" placeholder="Logradouro">
+        <input type="text" id="num" placeholder="Número">
+        <input type="text" id="bairro" placeholder="Bairro">
+        <input type="text" id="cid" placeholder="Cidade">
+        <select id="uf"><option value="SP">SP</option><option value="RJ">RJ</option></select>
+        <input type="text" id="tel" placeholder="Telefone Fixo">
+        <button onclick="finalizar()">FINALIZAR</button>
+        <div id="err2" class="msg"></div>
+    </div>
+</div>
+
+<script src="js/api.js"></script>
+<script>
+    let idUser = null;
+
+    async function proximo() {
+        const err1 = document.getElementById('err1');
+        const dados = {
+            primeiro_nome: document.getElementById('p_nome').value,
+            sobrenome: document.getElementById('s_nome').value,
+            username: document.getElementById('user').value,
+            email: document.getElementById('email').value,
+            senha: document.getElementById('pass').value,
+            celular: document.getElementById('cel').value
+        };
+
+        const res = await chamarApi('/account/register', 'POST', dados);
+        
+        // Ajuste conforme o seu print: o ID vem em res.usuario.id
+        if (!res.erro && res.usuario) {
+            idUser = res.usuario.id; 
+            document.getElementById('passo1').classList.remove('active');
+            document.getElementById('passo2').classList.add('active');
+        } else {
+            err1.innerText = res.message || "Erro ao criar usuário.";
+        }
+    }
+
+    async function finalizar() {
+        const err2 = document.getElementById('err2');
+        
+        // Se o ID não foi capturado no passo anterior, trava aqui
+        if(!idUser) {
+            alert("ID do usuário não encontrado. Recomece o cadastro.");
+            return;
+        }
+
+        const dadosInstituicao = {
+            razaoSocial: document.getElementById('razao').value,
+            cnpj: document.getElementById('cnpj').value,
+            cep: document.getElementById('cep').value,
+            endereco: document.getElementById('rua').value,
+            numero: document.getElementById('num').value,
+            bairro: document.getElementById('bairro').value,
+            cidade: document.getElementById('cid').value,
+            uf: document.getElementById('uf').value,
+            telefone: document.getElementById('tel').value,
+            email: document.getElementById('email').value, // E-mail de contato
+            idUsuarioDono: idUser // CALLBACK
+        };
+
+        // CORREÇÃO: Chamando a rota correta da INSTITUIÇÃO
+        const res = await chamarApi('/instituicao/registrar', 'POST', dadosInstituicao);
+        
+        if (!res.erro) {
+            alert("Sucesso! Instituição cadastrada e vinculada.");
+            window.location.reload();
+        } else {
+            err2.innerText = res.message || "Erro ao cadastrar instituição.";
+            console.error("Detalhes do erro:", res);
+        }
+    }
+</script>
+</body>
+</html>
