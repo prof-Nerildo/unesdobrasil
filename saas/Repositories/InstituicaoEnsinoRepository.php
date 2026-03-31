@@ -1,8 +1,6 @@
 <?php
 namespace Repositories;
 
-use Data\Database;
-use Models\RegisterRequestModelInstituicaoEnsino;
 use PDO;
 use Exception;
 
@@ -13,59 +11,63 @@ class InstituicaoEnsinoRepository {
         $this->db = \Data\Database::getConnection();
     }
 
-    public function create(RegisterRequestModelInstituicaoEnsino $model) {
+    public function createSimples(\Models\RegisterRequestModelInstituicaoEnsino $model) {
         try {
-            $this->db->beginTransaction();
+            if (!$this->db->inTransaction()) {
+                $this->db->beginTransaction();
+            }
 
-            // 1. Inserir Instituição
-            $sqlInst = "INSERT INTO instituicao (razao_social, nome_fantasia, cnpj, insc_estadual, idStatus) 
-                        VALUES (?, ?, ?, ?, 3)";
+            // 1. Grava a Instituição
+            $sqlInst = "INSERT INTO instituicao (razao_social, nome_fantasia, cnpj, idStatus) VALUES (?, ?, ?, 3)";
             $stmt = $this->db->prepare($sqlInst);
             $stmt->execute([
                 $model->razao_social, 
                 $model->nome_fantasia, 
-                $model->cnpj, 
-                $model->insc_estadual
+                $model->cnpj
             ]);
             $idInst = $this->db->lastInsertId();
 
-            // 2. Inserir Endereço
-            $sqlEnd = "INSERT INTO endereco (idReferencia, tipo_entidade, cep, logradouro, numero, bairro, cidade, uf) 
-                       VALUES (?, 'instituicao', ?, ?, ?, ?, ?, ?)";
+            // 2. Grava o Endereço (CONTAGEM CORRIGIDA: 8 campos e 8 valores)
+            $sqlEnd = "INSERT INTO endereco (idReferencia, tipo_entidade, cep, logradouro, numero, complemento, bairro, cidade, uf) 
+                       VALUES (?, 'instituicao', ?, ?, ?, ?, ?, ?, ?)";
             $stmtEnd = $this->db->prepare($sqlEnd);
             $stmtEnd->execute([
-                $idInst, 
-                $model->cep, 
-                $model->logradouro, 
-                $model->numero, 
-                $model->bairro, 
-                $model->cidade, 
-                $model->uf
+                $idInst,           // 1
+                $model->cep,       // 2
+                $model->logradouro,// 3
+                $model->numero,    // 4
+                $model->complemento,// 5 (ESTE ESTAVA FALTANDO NA CONTAGEM!)
+                $model->bairro,    // 6
+                $model->cidade,    // 7
+                $model->uf         // 8
             ]);
 
-            // 3. Inserir Contatos
+            // 3. Grava os Contatos na tabela 'contato'
             $sqlCont = "INSERT INTO contato (idReferencia, tipo_entidade, tipo_contato, valor) VALUES (?, 'instituicao', ?, ?)";
             $stmtCont = $this->db->prepare($sqlCont);
-            
-            // E-mail Institucional
-            $stmtCont->execute([$idInst, 'email_secretaria', $model->email_contato]);
-            
-            // Telefone Fixo (se preenchido)
+
+            // E-mail da escola
+            if (!empty($model->email_contato)) {
+                $stmtCont->execute([$idInst, 'email_secretaria', $model->email_contato]);
+            }
+            // Telefone Fixo
             if (!empty($model->telefone)) {
                 $stmtCont->execute([$idInst, 'fixo', $model->telefone]);
-            }
-            
-            // Fax (se preenchido)
-            if (!empty($model->fax)) {
-                $stmtCont->execute([$idInst, 'fax', $model->fax]);
             }
 
             $this->db->commit();
             return $idInst;
-
         } catch (Exception $e) {
             if ($this->db->inTransaction()) $this->db->rollBack();
-            throw new Exception("Falha ao gravar tabelas: " . $e->getMessage());
+            throw new Exception("Erro SQL: " . $e->getMessage());
         }
+    }
+
+    public function findAll() {
+        $sql = "SELECT i.idInstituicao, i.razao_social, i.nome_fantasia, i.idStatus, i.valor_documento_nacional, u.primeiro_nome as dono_nome
+                FROM instituicao i LEFT JOIN usuario u ON u.idInstituicao = i.idInstituicao ORDER BY i.created_at DESC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 }

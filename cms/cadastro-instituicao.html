@@ -2,107 +2,235 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>UNES - Cadastro</title>
+    <title>UNES - Cadastro Institucional</title>
     <style>
-        body { font-family: sans-serif; background: #f4f4f4; padding: 40px; }
-        .card { background: white; max-width: 600px; margin: auto; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #e9ecef; padding: 20px; color: #495057; }
+        .container { max-width: 800px; margin: auto; }
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin-bottom: 20px; }
+        h2 { border-bottom: 2px solid #dee2e6; padding-bottom: 10px; margin-bottom: 20px; color: #212529; font-size: 1.5rem; }
+        h3 { font-size: 1.1rem; margin-top: 25px; color: #0d6efd; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .grid-3 { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 15px; }
+        .full-width { grid-column: span 2; }
+        
+        label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9rem; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ced4da; border-radius: 6px; box-sizing: border-box; font-size: 1rem; transition: border-color 0.2s; }
+        input:focus { border-color: #86b7fe; outline: none; box-shadow: 0 0 0 0.25rem rgba(13,110,253,.25); }
+        
+        .btn-next { width: 100%; padding: 15px; background: #198754; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1.1rem; font-weight: bold; margin-top: 20px; }
+        .btn-next:hover { background: #157347; }
         .step { display: none; }
         .active { display: block; }
-        input, select { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; box-sizing: border-box; }
-        button { width: 100%; padding: 15px; background: #28a745; color: white; border: none; cursor: pointer; font-weight: bold; }
-        .msg { color: red; margin-top: 10px; font-size: 14px; }
+        .msg-erro { color: #dc3545; background: #f8d7da; padding: 10px; border-radius: 6px; margin-top: 15px; display: none; }
     </style>
 </head>
 <body>
 
-<div class="card">
+<div class="container">
     <div id="passo1" class="step active">
-        <h2>Passo 1: Administrador</h2>
-        <input type="text" id="p_nome" placeholder="Primeiro Nome">
-        <input type="text" id="s_nome" placeholder="Sobrenome">
-        <input type="text" id="user" placeholder="Usuário">
-        <input type="email" id="email" placeholder="E-mail">
-        <input type="password" id="pass" placeholder="Senha">
-        <input type="text" id="cel" placeholder="Celular">
-        <button onclick="proximo()">PRÓXIMO</button>
-        <div id="err1" class="msg"></div>
+        <div class="card">
+            <h2>Dados da Instituição</h2>
+            
+            <div class="grid">
+                <div class="full-width">
+                    <label>Razão Social</label>
+                    <input type="text" id="razao" placeholder="Razão Social completa">
+                </div>
+                <div>
+                    <label>CNPJ</label>
+                    <input type="text" id="cnpj" placeholder="00.000.000/0000-00">
+                </div>
+                <div class="full-width">
+                    <label>Nome Fantasia</label>
+                    <input type="text" id="fantasia" placeholder="Nome comercial">
+                </div>
+                <div>
+                    <label>Insc. Estadual</label>
+                    <input type="text" id="insc_est" placeholder="Inscrição Estadual">
+                </div>
+                <div>
+                    <label>Insc. Municipal</label>
+                    <input type="text" id="insc_mun" placeholder="Inscrição Municipal">
+                </div>
+            </div>
+
+            <h3>Endereço</h3>
+            <div class="grid-3">
+                <div class="full-width">
+                    <label>Endereço</label>
+                    <input type="text" id="rua" placeholder="Logradouro, Av, Rua...">
+                </div>
+                <div>
+                    <label>Nº</label>
+                    <input type="text" id="num" placeholder="Nº">
+                </div>
+                <div>
+                    <label>Complemento</label>
+                    <input type="text" id="comp" placeholder="Sala, Bloco...">
+                </div>
+                <div>
+                    <label>CEP</label>
+                    <input type="text" id="cep" placeholder="00000-000">
+                </div>
+                <div>
+                    <label>Bairro</label>
+                    <input type="text" id="bairro" placeholder="Bairro">
+                </div>
+                <div>
+                    <label>Cidade</label>
+                    <input type="text" id="cid" placeholder="Cidade">
+                </div>
+                <div>
+                    <label>UF</label>
+                    <select id="uf">
+                        <option value="SP">SP</option>
+                        <option value="RJ">RJ</option>
+                        <option value="MG">MG</option>
+                    </select>
+                </div>
+            </div>
+
+            <h3>Contato</h3>
+            <div class="grid">
+                <div class="full-width">
+                    <label>E-mail Institucional</label>
+                    <input type="email" id="email_inst" placeholder="contato@escola.com">
+                </div>
+                <div>
+                    <label>Telefone</label>
+                    <input type="text" id="tel" placeholder="(00) 0000-0000">
+                </div>
+                <div>
+                    <label>Telefone/Fax</label>
+                    <input type="text" id="fax" placeholder="(00) 0000-0000">
+                </div>
+            </div>
+
+            <button class="btn-next" onclick="salvarInstituicao()">PRÓXIMO PASSO</button>
+            <div id="err1" class="msg-erro"></div>
+        </div>
     </div>
 
     <div id="passo2" class="step">
-        <h2>Passo 2: Instituição</h2>
-        <input type="text" id="razao" placeholder="Razão Social">
-        <input type="text" id="cnpj" placeholder="CNPJ">
-        <input type="text" id="cep" placeholder="CEP">
-        <input type="text" id="rua" placeholder="Logradouro">
-        <input type="text" id="num" placeholder="Número">
-        <input type="text" id="bairro" placeholder="Bairro">
-        <input type="text" id="cid" placeholder="Cidade">
-        <select id="uf"><option value="SP">SP</option><option value="RJ">RJ</option></select>
-        <input type="text" id="tel" placeholder="Telefone Fixo">
-        <button onclick="finalizar()">FINALIZAR</button>
-        <div id="err2" class="msg"></div>
+        <div class="card">
+            <h2>Dados do Administrador</h2>
+            
+            <div class="grid">
+                <div>
+                    <label>Primeiro Nome</label>
+                    <input type="text" id="p_nome" placeholder="Nome">
+                </div>
+                <div>
+                    <label>Sobre Nome</label>
+                    <input type="text" id="s_nome" placeholder="Sobrenome">
+                </div>
+                <div class="full-width">
+                    <label>Cargo</label>
+                    <input type="text" id="cargo" placeholder="Ex: Diretor, Dev, TI...">
+                </div>
+                <div class="full-width">
+                    <label>E-mail Pessoal</label>
+                    <input type="email" id="email_user" placeholder="nome@email.com">
+                </div>
+                <div>
+                    <label>Telefone Residencial</label>
+                    <input type="text" id="tel_res" placeholder="(00) 0000-0000">
+                </div>
+                <div>
+                    <label>Celular | WhatsApp</label>
+                    <input type="text" id="cel" placeholder="(00) 90000-0000">
+                </div>
+            </div>
+
+            <h3>Acesso ao Sistema</h3>
+            <div class="grid">
+                <div class="full-width">
+                    <label>Usuário (Login)</label>
+                    <input type="text" id="user" placeholder="Escolha um nome de usuário">
+                </div>
+                <div>
+                    <label>Senha</label>
+                    <input type="password" id="pass" placeholder="********">
+                </div>
+                <div>
+                    <label>Confirmar Senha</label>
+                    <input type="password" id="pass_conf" placeholder="********">
+                </div>
+            </div>
+
+            <button class="btn-next" style="background: #0d6efd;" onclick="finalizarUsuario()">FINALIZAR CADASTRO</button>
+            <div id="err2" class="msg-erro"></div>
+        </div>
     </div>
 </div>
 
 <script src="js/api.js"></script>
 <script>
-    let idUser = null;
+    let idInstituicaoGerado = null;
 
-    async function proximo() {
-        const err1 = document.getElementById('err1');
-        const dados = {
-            primeiro_nome: document.getElementById('p_nome').value,
-            sobrenome: document.getElementById('s_nome').value,
-            username: document.getElementById('user').value,
-            email: document.getElementById('email').value,
-            senha: document.getElementById('pass').value,
-            celular: document.getElementById('cel').value
+    async function salvarInstituicao() {
+        const divErro = document.getElementById('err1');
+        divErro.style.display = 'none';
+
+        const dadosInst = {
+            razao_social:  document.getElementById('razao').value,
+            nome_fantasia: document.getElementById('fantasia').value,
+            cnpj:          document.getElementById('cnpj').value,
+            insc_estadual: document.getElementById('insc_est').value,
+            insc_municipal:document.getElementById('insc_mun').value,
+            cep:           document.getElementById('cep').value,
+            logradouro:    document.getElementById('rua').value,
+            numero:        document.getElementById('num').value,
+            complemento:   document.getElementById('comp').value,
+            bairro:        document.getElementById('bairro').value,
+            cidade:        document.getElementById('cid').value,
+            uf:            document.getElementById('uf').value,
+            email_contato: document.getElementById('email_inst').value,
+            telefone:      document.getElementById('tel').value,
+            fax:           document.getElementById('fax').value
         };
 
-        const res = await chamarApi('/account/register', 'POST', dados);
-        
-        // Ajuste conforme o seu print: o ID vem em res.usuario.id
-        if (!res.erro && res.usuario) {
-            idUser = res.usuario.id; 
+        const res = await chamarApi('/instituicao/registrar', 'POST', dadosInst);
+
+        if (!res.erro && res.idInstituicao) {
+            idInstituicaoGerado = res.idInstituicao;
             document.getElementById('passo1').classList.remove('active');
             document.getElementById('passo2').classList.add('active');
+            window.scrollTo(0,0);
         } else {
-            err1.innerText = res.message || "Erro ao criar usuário.";
+            divErro.innerText = "Erro: " + res.message;
+            divErro.style.display = 'block';
         }
     }
 
-    async function finalizar() {
-        const err2 = document.getElementById('err2');
-        
-        // Se o ID não foi capturado no passo anterior, trava aqui
-        if(!idUser) {
-            alert("ID do usuário não encontrado. Recomece o cadastro.");
-            return;
+    async function finalizarUsuario() {
+        const divErro = document.getElementById('err2');
+        divErro.style.display = 'none';
+
+        if(document.getElementById('pass').value !== document.getElementById('pass_conf').value) {
+            alert("As senhas não conferem!"); return;
         }
 
-        const dadosInstituicao = {
-            razaoSocial: document.getElementById('razao').value,
-            cnpj: document.getElementById('cnpj').value,
-            cep: document.getElementById('cep').value,
-            endereco: document.getElementById('rua').value,
-            numero: document.getElementById('num').value,
-            bairro: document.getElementById('bairro').value,
-            cidade: document.getElementById('cid').value,
-            uf: document.getElementById('uf').value,
-            telefone: document.getElementById('tel').value,
-            email: document.getElementById('email').value, // E-mail de contato
-            idUsuarioDono: idUser // CALLBACK
+        const dadosUser = {
+            primeiro_nome: document.getElementById('p_nome').value,
+            sobrenome:     document.getElementById('s_nome').value,
+            cargo:         document.getElementById('cargo').value,
+            email:         document.getElementById('email_user').value,
+            username:      document.getElementById('user').value,
+            senha:         document.getElementById('pass').value,
+            celular:       document.getElementById('cel').value,
+            idInstituicao: idInstituicaoGerado
         };
 
-        // CORREÇÃO: Chamando a rota correta da INSTITUIÇÃO
-        const res = await chamarApi('/instituicao/registrar', 'POST', dadosInstituicao);
-        
+        const res = await chamarApi('/account/register', 'POST', dadosUser);
+
         if (!res.erro) {
-            alert("Sucesso! Instituição cadastrada e vinculada.");
-            window.location.reload();
+            alert("Cadastro realizado com sucesso! Bem-vindo ao UNES.");
+            window.location.href = 'dashboard.html';
         } else {
-            err2.innerText = res.message || "Erro ao cadastrar instituição.";
-            console.error("Detalhes do erro:", res);
+            divErro.innerText = "Erro: " + res.message;
+            divErro.style.display = 'block';
         }
     }
 </script>

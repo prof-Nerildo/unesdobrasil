@@ -1,45 +1,46 @@
 <?php
 namespace Controllers;
 
-use Repositories\InstituicaoEnsinoRepository;
-use Repositories\UsuarioRepository;
-use Models\RegisterRequestModelInstituicaoEnsino;
 use Exception;
 
 class InstituicaoEnsinoController {
     private $repoInst;
-    private $repoUser;
 
     public function __construct() {
         $this->repoInst = new \Repositories\InstituicaoEnsinoRepository();
-        $this->repoUser = new \Repositories\UsuarioRepository();
     }
 
+    // PASSO 1: Apenas a Instituição
     public function registrar($dadosJson) {
         try {
-            // Mapeia os dados do formulário
-            $request = new \Models\RegisterRequestModelInstituicaoEnsino($dadosJson);
+            $model = new \Models\RegisterRequestModelInstituicaoEnsino($dadosJson);
             
-            // Valida campos básicos
-            $erros = $request->validate();
-            if (!empty($erros)) throw new Exception(implode(", ", $erros), 400);
-
-            // 1. Grava a Instituição, Endereço e Contatos (Tudo em uma Transaction)
-            $idInst = $this->repoInst->create($request);
-            
-            // 2. Vincula o usuário ao ID da instituição criada
-            if (!empty($request->idUsuarioDono)) {
-                $this->repoUser->vincularInstituicao($request->idUsuarioDono, $idInst);
+            $erros = $model->validate();
+            if (!empty($erros)) {
+                http_response_code(400);
+                return json_encode(["erro" => true, "message" => implode(", ", $erros)]);
             }
+
+            // Grava a instituição e retorna o ID gerado
+            $id = $this->repoInst->createSimples($model);
 
             return json_encode([
                 "erro" => false, 
-                "message" => "Instituição cadastrada com sucesso!"
+                "idInstituicao" => $id, 
+                "message" => "Instituição criada com sucesso!"
             ]);
-
         } catch (Exception $e) {
             http_response_code(500);
-            return json_encode(["erro" => true, "message" => "Erro no servidor: " . $e->getMessage()]);
+            return json_encode(["erro" => true, "message" => $e->getMessage()]);
+        }
+    }
+
+    public function listarTodas($userLogado) {
+        try {
+            $lista = $this->repoInst->findAll(); 
+            return json_encode(["erro" => false, "dados" => $lista]);
+        } catch (Exception $e) {
+            return json_encode(["erro" => true, "message" => $e->getMessage()]);
         }
     }
 }

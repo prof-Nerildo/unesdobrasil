@@ -10,21 +10,26 @@
         input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
         button { width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
         button:hover { background: #0056b3; }
-        .error { color: red; font-size: 14px; text-align: center; margin-top: 10px; }
+        .error { color: red; font-size: 14px; text-align: center; margin-top: 10px; min-height: 20px; }
         .links { text-align: center; margin-top: 15px; font-size: 14px; }
+        a { color: #007bff; text-decoration: none; }
+        a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
 
 <div class="login-card">
     <h2>Acesso UNES</h2>
-    <input type="text" id="login" placeholder="E-mail ou Usuário">
-    <input type="password" id="senha" placeholder="Sua Senha">
-    <button onclick="fazerLogin()">ENTRAR</button>
+    <input type="text" id="login_input" placeholder="E-mail ou Usuário">
+    <input type="password" id="senha_input" placeholder="Sua Senha">
+    <button id="btnEntrar" onclick="fazerLogin()">ENTRAR</button>
     <div id="mensagem" class="error"></div>
     
     <div class="links">
         <a href="esqueci-senha.html">Esqueci minha senha</a>
+    </div>
+    <div class="links">
+        <a href="cadastro-instituicao.html">Cadastre-se</a>
     </div>
 </div>
 
@@ -32,30 +37,55 @@
 <script>
     async function fazerLogin() {
         const msg = document.getElementById('mensagem');
-        const loginVal = document.getElementById('login').value;
-        const senhaVal = document.getElementById('senha').value;
+        const btn = document.getElementById('btnEntrar');
+        const loginVal = document.getElementById('login_input').value;
+        const senhaVal = document.getElementById('senha_input').value;
 
         if(!loginVal || !senhaVal) {
             msg.innerText = "Preencha todos os campos.";
             return;
         }
 
-        const dados = { login: loginVal, senha: senhaVal };
+        // Feedback visual de carregamento
+        msg.innerText = "Autenticando...";
+        btn.disabled = true;
 
-        // Chama a rota de login que ajustamos no UsuarioController
-        const res = await chamarApi('/account/login', 'POST', dados);
+        try {
+            const dados = { login: loginVal, senha: senhaVal };
+            
+            // Chama a API
+            const res = await chamarApi('/account/login', 'POST', dados);
 
-        if (!res.erro) {
-            // SALVA O TOKEN: Importante para o Dashboard ler depois
-            localStorage.setItem('token_unes', res.token);
-            // Redireciona para o Dashboard
-            window.location.href = 'dashboard.html';
-        } else {
-            msg.innerText = res.message;
+            console.log("Resposta da API:", res); // Debug no F12
+
+            if (res && res.erro === false) {
+                // SALVA O TOKEN
+                if(res.token) {
+                    localStorage.setItem('token_unes', res.token);
+                    msg.style.color = "green";
+                    msg.innerText = "Sucesso! Redirecionando...";
+                    
+                    // Pequeno delay para garantir que o LocalStorage gravou
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 500);
+                } else {
+                    msg.innerText = "Erro: Token não recebido.";
+                    btn.disabled = false;
+                }
+            } else {
+                msg.style.color = "red";
+                msg.innerText = res.message || "Erro ao realizar login.";
+                btn.disabled = false;
+            }
+        } catch (error) {
+            console.error("Erro no processo de login:", error);
+            msg.innerText = "Erro de conexão. Verifique o console (F12).";
+            btn.disabled = false;
         }
     }
 
-    // Permitir dar Enter para logar
+    // Atalho tecla Enter
     document.addEventListener('keypress', function (e) {
         if (e.key === 'Enter') fazerLogin();
     });

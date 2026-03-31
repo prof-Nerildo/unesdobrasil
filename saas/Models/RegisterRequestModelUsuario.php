@@ -18,7 +18,8 @@ class RegisterRequestModelUsuario {
         // Mapeia o JSON vindo do CMS para as propriedades da classe
         $this->idAcl         = $dados['idAcl'] ?? 3; // Padrão Instituição
         $this->idStatus      = $dados['idStatus'] ?? 2; // Ativo por padrão
-        $this->idPerfil      = $dados['idPerfil'] ?? 1; 
+        $this->idPerfil      = $dados['idPerfil'] ?? 2; 
+        $this->idInstituicao = $dados['idInstituicao'] ?? null;
         $this->primeiro_nome = $dados['primeiro_nome'] ?? '';
         $this->sobrenome     = $dados['sobrenome'] ?? '';
         $this->cargo         = $dados['cargo'] ?? '';

@@ -1,9 +1,6 @@
 <?php
 namespace Repositories;
 
-use Data\Database;
-use Models\RegisterRequestModelUsuario;
-use Data\Models\Usuario;
 use PDO;
 use Exception;
 
@@ -14,24 +11,21 @@ class UsuarioRepository {
         $this->db = \Data\Database::getConnection();
     }
 
-    public function emailOuUsernameExiste($email, $username) {
-        $sql = "SELECT COUNT(idUsuario) as total FROM usuario WHERE email = :email OR username = :username";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([':email' => $email, ':username' => $username]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        return ($result['total'] ?? 0) > 0;
-    }
-
-    public function create(RegisterRequestModelUsuario $request) {
+    public function create(\Models\RegisterRequestModelUsuario $request) {
         try {
-            $this->db->beginTransaction();
-            $sql = "INSERT INTO usuario (idAcl, idStatus, idPerfil, primeiro_nome, sobrenome, cargo, email, username, senha) 
-                    VALUES (:idAcl, :idStatus, :idPerfil, :primeiro_nome, :sobrenome, :cargo, :email, :username, :senha)";
+            if (!$this->db->inTransaction()) {
+                $this->db->beginTransaction();
+            }
+
+            $sql = "INSERT INTO usuario (idAcl, idStatus, idPerfil, idInstituicao, primeiro_nome, sobrenome, cargo, email, username, senha) 
+                    VALUES (:idAcl, :idStatus, :idPerfil, :idInst, :primeiro_nome, :sobrenome, :cargo, :email, :username, :senha)";
+            
             $stmt = $this->db->prepare($sql);
             $stmt->execute([
                 ':idAcl'         => $request->idAcl,
                 ':idStatus'      => $request->idStatus,
                 ':idPerfil'      => $request->idPerfil,
+                ':idInst'        => $request->idInstituicao,
                 ':primeiro_nome' => $request->primeiro_nome,
                 ':sobrenome'     => $request->sobrenome,
                 ':cargo'         => $request->cargo,
@@ -39,42 +33,49 @@ class UsuarioRepository {
                 ':username'      => $request->username,
                 ':senha'         => $request->senha 
             ]);
+
             $idUsuario = $this->db->lastInsertId();
+
+            if (!empty($request->celular)) {
+                $sqlCont = "INSERT INTO contato (idReferencia, tipo_entidade, tipo_contato, valor) VALUES (?, 'usuario', 'celular', ?)";
+                $this->db->prepare($sqlCont)->execute([$idUsuario, $request->celular]);
+            }
+
             $this->db->commit();
             return $idUsuario;
+
         } catch (Exception $e) {
             if ($this->db->inTransaction()) $this->db->rollBack();
-            throw new Exception($e->getMessage());
+            throw new Exception("Erro ao criar usuário: " . $e->getMessage());
         }
     }
 
     public function findByLogin($login) {
-        // 1. Query com dois marcadores distintos
-        $sql = "SELECT * FROM usuario WHERE email = :email OR username = :user LIMIT 1";
-        
+        $sql = "SELECT * FROM usuario WHERE email = ? OR username = ? LIMIT 1";
         $stmt = $this->db->prepare($sql);
-        
-        // 2. Passamos o valor de $login para ambos os marcadores
-        $stmt->execute([
-            ':email' => $login,
-            ':user'  => $login
-        ]);
-        
-        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $stmt->execute([$login, $login]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$row) return null;
 
-        // 3. Montamos o objeto Usuario com os dados do banco
         $usuario = new \Data\Models\Usuario();
         $usuario->setIdUsuario($row['idUsuario']);
         $usuario->setIdAcl($row['idAcl']);
         $usuario->setIdStatus($row['idStatus']);
-        $usuario->setIdPerfil($row['idPerfil'] ?? 4);
+        $usuario->setIdPerfil($row['idPerfil']);
         $usuario->setSenha($row['senha']);
-        $usuario->setEmail($row['email']); // ESSENCIAL: preenche o e-mail para o PHPMailer
+        $usuario->setEmail($row['email']); 
         $usuario->setPrimeiroNome($row['primeiro_nome']);
         
         return $usuario;
+    }
+
+    public function emailOuUsernameExiste($email, $username) {
+        $sql = "SELECT COUNT(idUsuario) as total FROM usuario WHERE email = :email OR username = :username";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':email' => $email, ':username' => $username]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return ($result['total'] ?? 0) > 0;
     }
 
     public function updateLastLogin($idUsuario) {
@@ -92,12 +93,20 @@ class UsuarioRepository {
                 WHERE u.idUsuario = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([':id' => $idUsuario]);
-        return $stmt->fetch(\PDO::FETCH_ASSOC);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
     public function updateSenha($email, $novaSenhaHash) {
-        $sql = "UPDATE usuario SET senha = :senha WHERE email = :email";
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute([':senha' => $novaSenhaHash, ':email' => $email]);
+        try {
+            // Verifique se o nome da tabela é 'usuario' e a coluna é 'senha'
+            $sql = "UPDATE usuario SET senha = :senha WHERE email = :email";
+            $stmt = $this->db->prepare($sql);
+            return $stmt->execute([
+                ':senha' => $novaSenhaHash,
+                ':email' => $email
+            ]);
+        } catch (Exception $e) {
+            throw new Exception("Erro ao atualizar senha no banco: " . $e->getMessage());
+        }
     }
 }

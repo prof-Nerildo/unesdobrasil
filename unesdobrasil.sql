@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Mar 30, 2026 at 12:21 AM
+-- Generation Time: Mar 31, 2026 at 07:12 PM
 -- Server version: 8.4.3
 -- PHP Version: 8.3.26
 
@@ -190,8 +190,8 @@ CREATE TABLE `usuario` (
 --
 
 INSERT INTO `usuario` (`idUsuario`, `idAcl`, `idStatus`, `idPerfil`, `idInstituicao`, `primeiro_nome`, `sobrenome`, `cargo`, `email`, `username`, `senha`, `reset_token`, `reset_token_expira_em`, `last_login`, `created_at`, `updated_at`) VALUES
-(1, 1, 2, 1, NULL, 'web', 'DNA', 'Dev', 'nviana@webdna.com.br', 'webDNA', '$2y$10$uW38A3wpkNqQ2xh7WARMcOyHmYdQOuqsURBf6M9IdWav36DQOlDui', NULL, NULL, NULL, '2026-03-30 00:19:47', '2026-03-30 00:19:47'),
-(2, 2, 2, 2, NULL, 'Nerildo', 'Viana', 'Dev WebDNA', 'atendimento@webdna.com.br', 'adminWebDNA', '$2y$10$O4Lp0B4IROSD5zBjHlJir.EhQruFeIfYPeKZI9e3TrCAbjFx2MZp6', NULL, NULL, NULL, '2026-03-30 00:19:47', '2026-03-30 00:19:47');
+(1, 1, 2, 1, NULL, 'web', 'DNA', 'Dev', 'nviana@webdna.com.br', 'webDNA', '$2y$10$zBVIcNgys9zEWoY95h.Jwe17WoWM1kH.nZlLNqJ4OVzmN/WTYoZLS', NULL, NULL, '2026-03-31 16:12:12', '2026-03-30 00:19:47', '2026-03-31 19:12:12'),
+(2, 2, 2, 2, NULL, 'Nerildo', 'Viana', 'Dev WebDNA', 'atendimento@webdna.com.br', 'adminWebDNA', '$2y$10$A/YCr2PCfE2uCLCspsJ/reCRKxYVD7m67mV/dd85lfdlUdugAxIuG', NULL, NULL, '2026-03-31 16:12:26', '2026-03-30 00:19:47', '2026-03-31 19:12:26');
 
 --
 -- Indexes for dumped tables
