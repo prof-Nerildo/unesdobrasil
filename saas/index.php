@@ -76,6 +76,17 @@ try {
         // LISTAR TODAS (Dashboard precisa disso) - Removido nível 2 para teste
         $method === 'GET' && str_contains($uri, '/api/instituicao/todas') => 
             $instController->listarTodas($validarToken()),
+
+        // Adicione este caso dentro do seu try { echo match (true) { ... } }
+        $method === 'PUT' && str_contains($uri, '/api/instituicao/status/') => 
+            $instController->atualizarStatus(basename($uri), $dadosJson),
+
+        // No seu match (true)
+        $method === 'PUT' && str_contains($uri, '/api/instituicao/alterar/') => 
+            $instController->atualizarCompleto(basename($uri), $dadosJson),
+
+        $method === 'GET' && str_contains($uri, '/api/instituicao/buscar/') => 
+            $instController->buscarPorId(basename($uri)),
         
         default => throw new Exception("Endpoint não encontrado: " . $uri, 404)
     };

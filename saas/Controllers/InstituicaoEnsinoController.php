@@ -43,4 +43,38 @@ class InstituicaoEnsinoController {
             return json_encode(["erro" => true, "message" => $e->getMessage()]);
         }
     }
+
+    public function atualizarStatus($id, $dadosJson) {
+        try {
+            $idStatus = $dadosJson['idStatus'] ?? null;
+            if ($idStatus === null) {
+                throw new Exception("idStatus não informado.", 400);
+            }
+
+            $sucesso = $this->repoInst->updateStatus($id, $idStatus);
+
+            return json_encode([
+                "erro" => false,
+                "message" => "Status da instituição atualizado com sucesso!"
+            ]);
+        } catch (Exception $e) {
+            http_response_code($e->getCode() ?: 500);
+            return json_encode(["erro" => true, "message" => $e->getMessage()]);
+        }
+    }
+
+    public function atualizarCompleto($id, $dadosJson) {
+        try {
+            $sucesso = $this->repoInst->updateCompleto($id, $dadosJson);
+            return json_encode(["erro" => false, "message" => "Instituição validada e ativada com sucesso!"]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            return json_encode(["erro" => true, "message" => $e->getMessage()]);
+        }
+    }
+
+    public function buscarPorId($id) {
+        $dados = $this->repoInst->findById($id);
+        return json_encode(["erro" => false, "dados" => $dados]);
+    }
 }

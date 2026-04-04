@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Mar 31, 2026 at 07:12 PM
+-- Generation Time: Apr 04, 2026 at 08:57 PM
 -- Server version: 8.4.3
 -- PHP Version: 8.3.26
 
@@ -95,7 +95,9 @@ CREATE TABLE `instituicao` (
   `valor_documento_nacional` decimal(10,2) DEFAULT '0.00',
   `valor_frete` decimal(10,2) DEFAULT '0.00',
   `pode_editar_instituicao` enum('sim','nao') DEFAULT 'nao',
+  `label_edita_instituicao` varchar(255) DEFAULT 'Instituição Ensino',
   `pode_editar_curso` enum('sim','nao') DEFAULT 'nao',
+  `label_edita_curso` varchar(255) DEFAULT 'Série / Curso',
   `idStatus` int DEFAULT '3',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -190,8 +192,8 @@ CREATE TABLE `usuario` (
 --
 
 INSERT INTO `usuario` (`idUsuario`, `idAcl`, `idStatus`, `idPerfil`, `idInstituicao`, `primeiro_nome`, `sobrenome`, `cargo`, `email`, `username`, `senha`, `reset_token`, `reset_token_expira_em`, `last_login`, `created_at`, `updated_at`) VALUES
-(1, 1, 2, 1, NULL, 'web', 'DNA', 'Dev', 'nviana@webdna.com.br', 'webDNA', '$2y$10$zBVIcNgys9zEWoY95h.Jwe17WoWM1kH.nZlLNqJ4OVzmN/WTYoZLS', NULL, NULL, '2026-03-31 16:12:12', '2026-03-30 00:19:47', '2026-03-31 19:12:12'),
-(2, 2, 2, 2, NULL, 'Nerildo', 'Viana', 'Dev WebDNA', 'atendimento@webdna.com.br', 'adminWebDNA', '$2y$10$A/YCr2PCfE2uCLCspsJ/reCRKxYVD7m67mV/dd85lfdlUdugAxIuG', NULL, NULL, '2026-03-31 16:12:26', '2026-03-30 00:19:47', '2026-03-31 19:12:26');
+(1, 1, 2, 1, NULL, 'web', 'DNA', 'Dev', 'nviana@webdna.com.br', 'webDNA', '$2y$10$zBVIcNgys9zEWoY95h.Jwe17WoWM1kH.nZlLNqJ4OVzmN/WTYoZLS', NULL, NULL, '2026-04-01 09:35:35', '2026-03-30 00:19:47', '2026-04-01 12:35:35'),
+(2, 2, 2, 2, NULL, 'Nerildo', 'Viana', 'Dev WebDNA', 'atendimento@webdna.com.br', 'adminWebDNA', '$2y$10$QW1nBamYJ785JLq4jmBGU.QGRZLE2YLf/t.fBG9YB49VsTZeyEj0e', NULL, NULL, '2026-04-04 16:14:43', '2026-03-30 00:19:47', '2026-04-04 19:14:43');
 
 --
 -- Indexes for dumped tables
@@ -268,25 +270,25 @@ ALTER TABLE `acl`
 -- AUTO_INCREMENT for table `contato`
 --
 ALTER TABLE `contato`
-  MODIFY `idContato` int NOT NULL AUTO_INCREMENT;
+  MODIFY `idContato` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `endereco`
 --
 ALTER TABLE `endereco`
-  MODIFY `idEndereco` int NOT NULL AUTO_INCREMENT;
+  MODIFY `idEndereco` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `instituicao`
 --
 ALTER TABLE `instituicao`
-  MODIFY `idInstituicao` int NOT NULL AUTO_INCREMENT;
+  MODIFY `idInstituicao` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `instituicao_catraca`
 --
 ALTER TABLE `instituicao_catraca`
-  MODIFY `idCatraca` int NOT NULL AUTO_INCREMENT;
+  MODIFY `idCatraca` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `perfil`
@@ -304,7 +306,7 @@ ALTER TABLE `status`
 -- AUTO_INCREMENT for table `usuario`
 --
 ALTER TABLE `usuario`
-  MODIFY `idUsuario` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `idUsuario` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- Constraints for dumped tables

@@ -6,13 +6,14 @@
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
         .login-card { background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
-        h2 { text-align: center; color: #333; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        button:hover { background: #0056b3; }
-        .error { color: red; font-size: 14px; text-align: center; margin-top: 10px; min-height: 20px; }
+        h2 { text-align: center; color: #2c3e50; margin-bottom: 25px; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-size: 16px; }
+        button { width: 100%; padding: 12px; background: #2c3e50; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.3s; font-size: 16px; }
+        button:hover { background: #1a252f; }
+        button:disabled { background: #bdc3c7; cursor: not-allowed; }
+        .error { color: red; font-size: 14px; text-align: center; margin-top: 10px; min-height: 20px; font-weight: 500; }
         .links { text-align: center; margin-top: 15px; font-size: 14px; }
-        a { color: #007bff; text-decoration: none; }
+        a { color: #3498db; text-decoration: none; }
         a:hover { text-decoration: underline; }
     </style>
 </head>
@@ -34,6 +35,7 @@
 </div>
 
 <script src="js/api.js"></script>
+
 <script>
     async function fazerLogin() {
         const msg = document.getElementById('mensagem');
@@ -42,52 +44,68 @@
         const senhaVal = document.getElementById('senha_input').value;
 
         if(!loginVal || !senhaVal) {
+            msg.style.color = "red";
             msg.innerText = "Preencha todos os campos.";
             return;
         }
 
-        // Feedback visual de carregamento
+        msg.style.color = "#333";
         msg.innerText = "Autenticando...";
         btn.disabled = true;
 
         try {
             const dados = { login: loginVal, senha: senhaVal };
-            
-            // Chama a API
             const res = await chamarApi('/account/login', 'POST', dados);
 
-            console.log("Resposta da API:", res); // Debug no F12
-
             if (res && res.erro === false) {
-                // SALVA O TOKEN
-                if(res.token) {
-                    localStorage.setItem('token_unes', res.token);
+                // 1. Salva o Token JWT
+                localStorage.setItem('token_unes', res.token);
+                
+                // 2. Salva o objeto de usuário completo no navegador
+                if(res.usuario) {
+                    localStorage.setItem('user_unes', JSON.stringify(res.usuario));
+                    
+                    // Com base no seu console: id 1=Master, 2=Unes, 3=Instituicao
+                    const acl = parseInt(res.usuario.id); 
+
                     msg.style.color = "green";
                     msg.innerText = "Sucesso! Redirecionando...";
                     
-                    // Pequeno delay para garantir que o LocalStorage gravou
+                    // 3. Redirecionamento Inteligente (sem duplicar a pasta 'cms/')
                     setTimeout(() => {
-                        window.location.href = 'dashboard.html';
-                    }, 500);
-                } else {
-                    msg.innerText = "Erro: Token não recebido.";
-                    btn.disabled = false;
+                        if (acl === 1 || acl === 2) {
+                            // Se for Master ou UNES, entra na pasta /unes/
+                            window.location.href = 'unes/dashboard.php';
+                        } else if (acl === 3) {
+                            // Se for Instituição (Escola), entra na pasta /instituicao/
+                            window.location.href = 'instituicao/dashboard.php';
+                        } else {
+                            // Alunos ou outros perfis
+                            window.location.href = 'aluno/dashboard.php';
+                        }
+                    }, 600);
                 }
+
             } else {
                 msg.style.color = "red";
-                msg.innerText = res.message || "Erro ao realizar login.";
+                msg.innerText = res.message || "Usuário ou senha incorretos.";
                 btn.disabled = false;
             }
+
         } catch (error) {
             console.error("Erro no processo de login:", error);
-            msg.innerText = "Erro de conexão. Verifique o console (F12).";
+            msg.style.color = "red";
+            msg.innerText = "Erro de conexão com o servidor.";
             btn.disabled = false;
         }
     }
 
-    // Atalho tecla Enter
+    // Atalho: apertar Enter no teclado também faz login
     document.addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') fazerLogin();
+        if (e.key === 'Enter') {
+            const btn = document.getElementById('btnEntrar');
+            if(!btn.disabled) fazerLogin();
+        }
     });
 </script>
 </body>
