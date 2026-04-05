@@ -88,6 +88,14 @@ try {
         $method === 'GET' && str_contains($uri, '/api/instituicao/buscar/') => 
             $instController->buscarPorId(basename($uri)),
         
+        // Busca dados da Instituição pelo ID (O que o Dashboard e o Editar usam)
+        $method === 'GET' && str_contains($uri, '/api/instituicao/detalhes/') => 
+            $instController->buscarPorId(basename($uri)),
+
+        // Salva as alterações da Instituição (O que o botão Salvar usa)
+        $method === 'PUT' && str_contains($uri, '/api/instituicao/atualizar/') => 
+            $instController->atualizarCompleto(basename($uri), $dadosJson),
+        
         default => throw new Exception("Endpoint não encontrado: " . $uri, 404)
     };
 } catch (Exception $e) {

@@ -1,5 +1,5 @@
-<?php include_once 'includes/header.php'; ?>
-<?php include_once 'includes/sidebar.php'; ?>
+<?php include_once '../includes/headerInstituicao.php'; ?>
+<?php include_once '../includes/sidebarInstituicao.php'; ?>
 
 <main class="content">
     <section class="main-section">
@@ -7,32 +7,43 @@
             <h1>Bem-vindo, <span id="nomeUsuario">...</span></h1>
         </header>
 
-        <section class="stats">
-            <div class="card">
-                <h3>Instituições Ativas</h3>
-                <p id="totalInstituicoes">0</p>
-            </div>
-        </section>
+        <div class="container-fluid" style="padding: 20px;">
+            <h2 class="mb-4" style="font-size: 1.5rem; color: var(--primary); font-weight: 600;">Resumo de Carteirinhas</h2>
+            
+            <?php include '../componentes/cards_documentos.php'; ?>
+        </div>
 
-        
     </section>
-    <?php include_once 'includes/footer.php'; ?>
+
+    <?php include_once '../includes/footer.php'; ?>
 </main>
 
 <script>
-    async function carregarDashboard() {
+    async function carregarDashboardInstituicao() {
         try {
+            // 1. Carrega os dados do perfil logado (Adriano, Nerildo, etc)
             const resPerfil = await chamarApi('/account/me');
-            if(!resPerfil.erro) document.getElementById('nomeUsuario').innerText = resPerfil.dados.nome;
+            if(!resPerfil.erro) {
+                document.getElementById('nomeUsuario').innerText = resPerfil.dados.nome;
+                // Se o seu retorno do /me tiver o nome da escola, você preenche aqui:
+                if(resPerfil.dados.nome_instituicao) {
+                    document.getElementById('nomeEscola').innerText = resPerfil.dados.nome_instituicao;
+                }
+            }
 
-            const resInst = await chamarApi('/instituicao/todas');
-            const lista = Array.isArray(resInst) ? resInst : (resInst.dados || []);
-            document.getElementById('totalInstituicoes').innerText = lista.length;
+            // 2. Carrega os números dos cards (Criado, Solicitado, etc)
+            // Esta função deve estar dentro do seu componente ou no seu api.js
+            if (typeof atualizarCardsDocumentos === 'function') {
+                await atualizarCardsDocumentos();
+            }
+            
         } catch (error) {
-            console.error("Erro dashboard:", error);
+            console.error("Erro ao carregar dashboard:", error);
         }
     }
-    carregarDashboard();
+
+    // Dispara a carga
+    carregarDashboardInstituicao();
 </script>
 
-<?php include_once 'includes/footer2.php'; ?>
+<?php include_once '../includes/footerUnes-2.php'; ?>

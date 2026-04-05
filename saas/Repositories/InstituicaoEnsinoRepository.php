@@ -107,53 +107,64 @@ class InstituicaoEnsinoRepository {
                 $this->db->beginTransaction();
             }
 
-            // 1. Atualiza dados básicos, labels E FINANCEIRO
+            // 1. ATUALIZA INSTITUIÇÃO
             $sql = "UPDATE instituicao SET 
                         razao_social = ?, nome_fantasia = ?, cnpj = ?, 
                         pode_editar_instituicao = ?, label_edita_instituicao = ?, 
                         pode_editar_curso = ?, label_edita_curso = ?, 
-                        valor_documento_nacional = ?, valor_frete = ?,
-                        idStatus = 2 
+                        valor_documento_nacional = ?, valor_frete = ?, idStatus = 2 
                     WHERE idInstituicao = ?";
 
             $this->db->prepare($sql)->execute([
-                $dados['razao_social'], $dados['nome_fantasia'], $dados['cnpj'],
-                $dados['pode_editar_instituicao'], $dados['label_edita_instituicao'],
-                $dados['pode_editar_curso'], $dados['label_edita_curso'],
-                $dados['valor_documento_nacional'], $dados['valor_frete'],
-                $id
+                $dados['razao_social'] ?? '', $dados['nome_fantasia'] ?? '', $dados['cnpj'] ?? '',
+                $dados['pode_editar_instituicao'] ?? 'nao', $dados['label_edita_instituicao'] ?? '',
+                $dados['pode_editar_curso'] ?? 'nao', $dados['label_edita_curso'] ?? '',
+                $dados['valor_documento_nacional'] ?? 0, $dados['valor_frete'] ?? 0, $id
             ]);
 
-            // 2. Atualiza Endereço
+            // 2. ATUALIZA ENDEREÇO
             $sqlEnd = "UPDATE endereco SET 
-                    cep = ?, logradouro = ?, numero = ?, complemento = ?, 
-                    bairro = ?, cidade = ?, uf = ? 
+                        cep = ?, logradouro = ?, numero = ?, complemento = ?, bairro = ?, cidade = ?, uf = ? 
                     WHERE idReferencia = ? AND tipo_entidade = 'instituicao'";
             $this->db->prepare($sqlEnd)->execute([
-                $dados['cep'], $dados['logradouro'], $dados['numero'], $dados['complemento'],
-                $dados['bairro'], $dados['cidade'], $dados['uf'], $id
+                $dados['cep'] ?? '', $dados['logradouro'] ?? '', $dados['numero'] ?? '', 
+                $dados['complemento'] ?? '', $dados['bairro'] ?? '', $dados['cidade'] ?? '', 
+                $dados['uf'] ?? '', $id
             ]);
 
-            // 3. Atualiza ou Insere Catraca (Garante que só exista UMA linha devido ao UNIQUE KEY)
-            $sqlCat = "INSERT INTO instituicao_catraca (idInstituicao, modelo, quantidade, usa_catraca) 
-                    VALUES (?, ?, ?, ?) 
-                    ON DUPLICATE KEY UPDATE 
-                    modelo = VALUES(modelo), 
-                    quantidade = VALUES(quantidade), 
-                    usa_catraca = VALUES(usa_catraca)";
+            // 3. ATUALIZA CONTATOS (E-mail e Telefone) - LÓGICA SEM DUPLICAR
+            $contatos = [
+                ['tipo' => 'email_secretaria', 'valor' => $dados['email_contato'] ?? ''],
+                ['tipo' => 'fixo', 'valor' => $dados['telefone'] ?? '']
+            ];
 
-            $this->db->prepare($sqlCat)->execute([
-                $id, 
-                $dados['modelo_catraca'] ?? '', 
-                $dados['quantidade_catraca'] ?? 0, 
-                $dados['usa_catraca'] ?? 'nao'
-            ]);
+            foreach ($contatos as $c) {
+                // Primeiro: Tenta dar UPDATE na linha que já existe
+                $upd = "UPDATE contato SET valor = ? 
+                        WHERE idReferencia = ? AND tipo_entidade = 'instituicao' AND tipo_contato = ?";
+                $stmt = $this->db->prepare($upd);
+                $stmt->execute([$c['valor'], $id, $c['tipo']]);
+
+                // Segundo: Se o UPDATE não achou nada (rowCount 0), a gente verifica se precisa dar INSERT
+                if ($stmt->rowCount() == 0) {
+                    // Checa se a linha realmente não existe
+                    $check = "SELECT idContato FROM contato WHERE idReferencia = ? AND tipo_entidade = 'instituicao' AND tipo_contato = ?";
+                    $resCheck = $this->db->prepare($check);
+                    $resCheck->execute([$id, $c['tipo']]);
+
+                    if (!$resCheck->fetch()) {
+                        // Só insere se o SELECT acima voltar vazio
+                        $ins = "INSERT INTO contato (idReferencia, tipo_entidade, tipo_contato, valor) VALUES (?, 'instituicao', ?, ?)";
+                        $this->db->prepare($ins)->execute([$id, $c['tipo'], $c['valor']]);
+                    }
+                }
+            }
 
             $this->db->commit();
             return true;
         } catch (Exception $e) {
             if ($this->db->inTransaction()) $this->db->rollBack();
-            throw new Exception("Erro ao atualizar: " . $e->getMessage());
+            throw new Exception($e->getMessage());
         }
     }
 

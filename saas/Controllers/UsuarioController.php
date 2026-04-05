@@ -51,13 +51,10 @@ class UsuarioController {
                 return json_encode(["erro" => true, "message" => "Usuário não encontrado."]);
             }
 
-            // --- LÓGICA DE VALIDAÇÃO ---
-            
-            // 1. Tenta validar com a Criptografia Complexa
+            // Validação da Senha
             $stringComplexa = $this->montarStringCriptografia($senhaInput, $user->getEmail());
             $senhaOk = password_verify($stringComplexa, $user->getSenha());
 
-            // 2. Se falhar, tenta validar a senha pura (Para usuários antigos ou criados sem a dobra)
             if (!$senhaOk) {
                 $senhaOk = password_verify($senhaInput, $user->getSenha());
             }
@@ -66,8 +63,8 @@ class UsuarioController {
                 $tokenData = [
                     "id" => $user->getIdUsuario(),
                     "nome" => $user->getPrimeiroNome(),
-                    "email" => $user->getEmail(),
-                    "idAcl" => $user->getIdAcl()
+                    "idAcl" => $user->getIdAcl(),
+                    "idInstituicao" => $user->getIdInstituicao()
                 ];
 
                 $token = $this->jwt->generate($tokenData);
@@ -77,7 +74,7 @@ class UsuarioController {
                     "erro" => false,
                     "message" => "Login realizado com sucesso!",
                     "token" => $token,
-                    "usuario" => ["id" => $user->getIdUsuario(), "nome" => $user->getPrimeiroNome()]
+                    "usuario" => $user->toArray() // Usa o método toArray do Model que ajustamos
                 ]);
             }
 

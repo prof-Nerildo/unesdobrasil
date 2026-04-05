@@ -51,23 +51,30 @@ class UsuarioRepository {
     }
 
     public function findByLogin($login) {
-        $sql = "SELECT * FROM usuario WHERE email = ? OR username = ? LIMIT 1";
+        // 1. Usamos nomes diferentes (:email e :user) para não confundir o PDO
+        $sql = "SELECT * FROM usuario WHERE email = :email OR username = :user LIMIT 1";
+        
         $stmt = $this->db->prepare($sql);
-        $stmt->execute([$login, $login]);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-
+        
+        // 2. Passamos o mesmo valor ($login) para as duas "vagas"
+        $stmt->bindValue(':email', $login);
+        $stmt->bindValue(':user', $login);
+        
+        $stmt->execute();
+        
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
         if (!$row) return null;
 
-        $usuario = new \Data\Models\Usuario();
-        $usuario->setIdUsuario($row['idUsuario']);
-        $usuario->setIdAcl($row['idAcl']);
-        $usuario->setIdStatus($row['idStatus']);
-        $usuario->setIdPerfil($row['idPerfil']);
-        $usuario->setSenha($row['senha']);
-        $usuario->setEmail($row['email']); 
-        $usuario->setPrimeiroNome($row['primeiro_nome']);
+        // 3. Monta o objeto com os dados do banco
+        $user = new \Data\Models\Usuario();
+        $user->setIdUsuario($row['idUsuario']);
+        $user->setIdAcl($row['idAcl']);
+        $user->setIdInstituicao($row['idInstituicao'] ?? null); 
+        $user->setPrimeiroNome($row['primeiro_nome']);
+        $user->setEmail($row['email']);
+        $user->setSenha($row['senha']);
         
-        return $usuario;
+        return $user;
     }
 
     public function emailOuUsernameExiste($email, $username) {

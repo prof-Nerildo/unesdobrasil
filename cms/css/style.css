@@ -1,30 +1,53 @@
+/* --- 1. VARIÁVEIS DE CORES --- */
 :root {
-    --primary: #2c3e50;
-    --secondary: #34495e;
-    --accent: #3498db;
-    --success: #27ae60;
-    --text: #333;
-    --bg: #f4f7f6;
+    --primary: #2c3e50;    /* Azul Escuro (Sidebar) */
+    --primary-inst: #1a2a3a;    /* Cor isntituição Ensino*/
+    --secondary: #34495e;  /* Azul Médio (Hover) */
+    --accent: #3498db;     /* Azul Vivo */
+    --success: #27ae60;    /* Verde */
+    --warning: #f0ad4e;    /* Laranja */
+    --danger: #d9534f;     /* Vermelho */
+    --info: #0dcaf0;       /* Azul Ciano */
+    --dark: #212529;       /* Preto/Cinza Escuro */
+    --text: #333;          /* Cor do texto padrão */
+    --bg: #f4f7f6;         /* Fundo cinza bem clarinho */
     --white: #ffffff;
 }
 
-/* 1. CONFIGURAÇÃO DA TELA CHEIA */
-html, body {
-    height: 100%;
+/* --- 2. RESET E CONFIGURAÇÃO BASE --- */
+* {
     margin: 0;
     padding: 0;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    overflow: hidden;
+    box-sizing: border-box;
 }
 
-/* 2. ESTRUTURA PRINCIPAL */
+html, body {
+    height: 100%;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    overflow: hidden; /* Evita scroll duplo na página toda */
+}
+
+/* --- 3. ESTRUTURA PRINCIPAL (LAYOUT) --- */
 .wrapper {
     display: flex;
     height: 100vh;
     width: 100vw;
 }
 
-/* 3. MENU LATERAL (SIDEBAR) */
+/* 2. Crie uma classe especial para a sidebar da instituição */
+.sidebar.inst-bg {
+    background: var(--primary-inst) !important;
+}
+
+/* 3. Ajuste o hover para combinar com o novo tom */
+.sidebar.inst-bg ul li a:hover {
+    background: rgba(255, 255, 255, 0.05); /* Um brilho leve em vez de azul médio */
+    color: var(--white);
+}
+
+/* --- 4. MENU LATERAL (SIDEBAR) --- */
 .sidebar {
     width: 250px;
     background: var(--primary);
@@ -33,81 +56,66 @@ html, body {
     flex-direction: column;
     height: 100%;
     flex-shrink: 0;
-    box-sizing: border-box;
     padding: 20px;
+    z-index: 100;
 }
 
 .sidebar .logo {
-    font-size: 22px;
+    font-size: 20px;
     font-weight: bold;
+    text-align: center;
     padding-bottom: 20px;
     margin-bottom: 20px;
     border-bottom: 1px solid rgba(255,255,255,0.1);
+    letter-spacing: 1px;
 }
 
-/* --- ESTILO DOS LINKS DO MENU (O que estava faltando) --- */
 .sidebar ul {
-    list-style: none; /* Remove as bolinhas */
-    padding: 0;
-    margin: 0;
-}
-
-.sidebar ul li {
-    margin-bottom: 8px;
-}
-
-table th, table td {
-    white-space: nowrap; /* Faz o texto ficar em uma linha só */
-    padding: 12px 15px;
+    list-style: none;
 }
 
 .sidebar ul li a {
     color: #bdc3c7;
-    text-decoration: none; /* Remove o sublinhado */
-    display: block;
-    padding: 12px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    padding: 12px 15px;
     border-radius: 8px;
+    margin-bottom: 5px;
     transition: all 0.3s ease;
+}
+
+.sidebar ul li a i {
+    margin-right: 12px;
+    width: 20px;
+    text-align: center;
 }
 
 .sidebar ul li a:hover {
     background: var(--secondary);
     color: var(--white);
-    padding-left: 18px; /* Efeito de deslize ao passar o mouse */
+    padding-left: 20px;
 }
 
-/* 4. ÁREA DE CONTEÚDO */
+/* --- 5. ÁREA DE CONTEÚDO (DIREITA) --- */
 .content {
     flex-grow: 1;
-    background: var(--bg);
     display: flex;
     flex-direction: column;
     height: 100vh;
-    overflow-y: auto;
+    overflow-y: auto; /* Scroll apenas aqui dentro */
 }
 
+/* SEÇÃO PRINCIPAL QUE DÁ O RESPIRO (O que faltava!) */
 .main-section {
-    padding: 30px;
-    flex: 1 0 auto; /* Empurra o footer */
-    display: flex;
-    flex-direction: column;
+    padding: 30px; /* Margem interna para não grudar nas bordas */
+    flex: 1 0 auto;
 }
 
-/* 5. RODAPÉ */
-.main-footer {
-    flex-shrink: 0;
-    padding: 20px;
-    text-align: center;
-    color: #95a5a6;
-    font-size: 13px;
-    background: var(--white);
-    border-top: 1px solid rgba(0,0,0,0.05);
-}
-
-/* --- COMPONENTES --- */
+/* Barra de Topo interna (Onde vai o título e botão "Novo") */
 .top-bar {
     background: var(--white);
-    padding: 20px 30px;
+    padding: 20px 25px;
     margin-bottom: 30px;
     border-radius: 12px;
     box-shadow: 0 4px 6px rgba(0,0,0,0.02);
@@ -116,63 +124,85 @@ table th, table td {
     align-items: center;
 }
 
-.btn-novo {
-    background: var(--success);
-    color: white;
-    border: none;
-    padding: 12px 22px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: all 0.3s;
-    box-shadow: 0 4px 6px rgba(39, 174, 96, 0.2);
-}
-
-.btn-novo:hover {
-    background: #219150;
-    transform: translateY(-2px);
-}
-
+/* --- 6. GRID DE CARDS (DASHBOARD) --- */
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 20px;
     margin-bottom: 30px;
 }
 
 .card {
-    background: #fff;
-    padding: 20px;
-    border-radius: 8px;
+    background: var(--white);
+    padding: 15px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     cursor: pointer;
-    transition: 0.3s;
+    transition: transform 0.3s, box-shadow 0.3s;
+    border: 1px solid rgba(0,0,0,0.05);
 }
 
-.card:hover { transform: translateY(-5px); }
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+}
 
 .card-icon {
-    font-size: 40px;
-    margin-right: 20px;
-    color: #fff;
-    width: 80px;
-    height: 80px;
+    font-size: 28px;
+    margin-right: 15px;
+    color: var(--white);
+    width: 60px;
+    height: 60px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 8px;
+    border-radius: 10px;
+    flex-shrink: 0;
 }
 
-/* Cores da sua imagem */
-.card-warning .card-icon { background-color: #f0ad4e; } /* Laranja */
-.card-success .card-icon { background-color: #28a745; } /* Verde */
-.card-danger .card-icon { background-color: #d9534f; }  /* Vermelho */
+/* CORES DOS CARDS */
+.card-info .card-icon    { background-color: var(--info); }    /* Criado */
+.card-warning .card-icon { background-color: var(--warning); } /* Solicitado / Validar */
+.card-primary .card-icon { background-color: var(--accent); }  /* Em Produção */
+.card-success .card-icon { background-color: var(--success); } /* Produzido / Com Catraca */
+.card-danger .card-icon  { background-color: var(--danger); }  /* Sem Catraca */
+.card-dark .card-icon    { background-color: var(--dark); }    /* Entregue */
 
-.card-info h3 { font-size: 28px; margin: 0; color: #333; }
-.card-info p { margin: 5px 0 0; color: #666; font-size: 14px; font-weight: 500; }
-.paginacao-container { display: flex; justify-content: center; gap: 5px; margin: 20px 0; }
-    .btn-pag { padding: 8px 14px; border: 1px solid #dee2e6; background: white; cursor: pointer; border-radius: 4px; transition: 0.3s; }
-    .btn-pag:hover { background: #f8f9fa; }
-    .btn-pag.active { background: #2c3e50; color: white; border-color: #2c3e50; }
+.card-info h3 { 
+    font-size: 24px; 
+    margin: 0; 
+    color: var(--primary); 
+}
+
+.card-info p { 
+    margin: 2px 0 0; 
+    color: #7f8c8d; 
+    font-size: 13px; 
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+/* --- 7. BOTÕES E TABELAS --- */
+.btn-novo {
+    background: var(--success);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.3s;
+}
+
+.btn-novo:hover { background: #219150; }
+
+.main-footer {
+    padding: 20px;
+    text-align: center;
+    color: #95a5a6;
+    font-size: 13px;
+    background: var(--white);
+    border-top: 1px solid rgba(0,0,0,0.05);
+}

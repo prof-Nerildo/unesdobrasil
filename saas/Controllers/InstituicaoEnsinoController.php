@@ -77,4 +77,5 @@ class InstituicaoEnsinoController {
         $dados = $this->repoInst->findById($id);
         return json_encode(["erro" => false, "dados" => $dados]);
     }
+    
 }
