@@ -8,6 +8,17 @@ $c5 = $stats['entregue'] ?? 0;
 ?>
 
 <section class="stats-grid">
+    <div class="card card-action" onclick="window.location.href='nova-solicitacao.php'" 
+         style="cursor:pointer; border: 2px dashed #27ae60; background: rgba(39, 174, 96, 0.05); justify-content: center;">
+        <div class="card-icon" style="background: #27ae60; color: white;">
+            <i class="fas fa-plus"></i>
+        </div>
+        <div class="card-info">
+            <h3 style="color: #27ae60; font-size: 1.2rem;">NOVA</h3>
+            <p style="font-weight: bold; color: #219150;">SOLICITAÇÃO</p>
+        </div>
+    </div>
+
     <div class="card card-info" onclick="navegarFiltroDoc('criado')" style="cursor:pointer; border-left: 5px solid #0dcaf0;">
         <div class="card-icon"><i class="fas fa-plus-circle"></i></div>
         <div class="card-info">
@@ -48,19 +59,3 @@ $c5 = $stats['entregue'] ?? 0;
         </div>
     </div>
 </section>
-
-<script>
-/**
- * Lógica de navegação para documentos
- */
-function navegarFiltroDoc(status) {
-    const paginaAtual = window.location.pathname;
-    if (paginaAtual.includes('dashboard.php')) {
-        window.location.href = `carteirinhas.php?status=${status}`;
-    } else {
-        if (typeof filtrarTabelaDoc === 'function') {
-            filtrarTabelaDoc(status);
-        }
-    }
-}
-</script>

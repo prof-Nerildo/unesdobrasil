@@ -11,8 +11,22 @@
             <a href="instituicao.php"><i class="fas fa-university"></i> Minha Instituição</a>
         </li>
         <li><hr style="opacity: 0.1; margin: 10px 0;"></li>
-        <li class="menu-escola">
-            <a href="carteirinhas.php"><i class="fas fa-id-card"></i> Carteirinhas</a>
+        <li class="menu-item">
+            <div class="menu-dropdown-header" onclick="toggleSubmenu('submenu-carteirinhas')">
+                <span><i class="fas fa-id-card"></i> Carteirinhas</span>
+                <i class="fas fa-chevron-down arrow-icon"></i>
+            </div>
+            <ul id="submenu-carteirinhas" class="submenu">
+                <li>
+                    <a href="nova-solicitacao.php"><i class="fas fa-plus"></i> Nova Solicitação</a>
+                </li>
+                <li>
+                    <a href="em-producao.php"><i class="fas fa-hammer"></i> Em Produção</a>
+                </li>
+                <li>
+                    <a href="entregues.php"><i class="fas fa-check-double"></i> Entregues</a>
+                </li>
+            </ul>
         </li>
 
         
@@ -39,6 +53,17 @@ function ajustarMenuInstituicao() {
             }
         }
     }
+}
+
+function toggleSubmenu(id) {
+    const submenu = document.getElementById(id);
+    const menuItem = submenu.parentElement;
+    
+    // Alterna a classe active no submenu
+    submenu.classList.toggle('active');
+    
+    // Alterna a classe open no li pai (para girar a seta via CSS)
+    menuItem.classList.toggle('open');
 }
 ajustarMenuInstituicao();
 </script>

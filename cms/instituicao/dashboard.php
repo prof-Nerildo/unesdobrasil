@@ -8,7 +8,9 @@
         </header>
 
         <div class="container-fluid" style="padding: 20px;">
-            <h2 class="mb-4" style="font-size: 1.5rem; color: var(--primary); font-weight: 600;">Resumo de Carteirinhas</h2>
+            <h2 style="font-size: 1.5rem; color: var(--primary); font-weight: 600;">
+                Resumo de Carteirinhas
+            </h2>
             
             <?php include '../componentes/cards_documentos.php'; ?>
         </div>
