@@ -4,7 +4,7 @@
 
         <li><a href="dashboard.php">Início</a></li>
 
-        <li><a href="usuarios.php">Usuários</a></li>
+        <!--li><a href="usuarios.php">Usuários</a></li-->
         
         <li class="menu-unes">
             <a href="instituicoes.php">Instituições</a>

@@ -109,32 +109,18 @@ class InstituicaoEnsinoRepository {
 
             // 1. Atualiza dados básicos, labels E FINANCEIRO
             $sql = "UPDATE instituicao SET 
-                    razao_social = ?, 
-                    nome_fantasia = ?, 
-                    cnpj = ?, 
-                    insc_estadual = ?, 
-                    insc_municipal = ?, 
-                    valor_documento_nacional = ?, -- <-- ADICIONADO
-                    valor_frete = ?,              -- <-- ADICIONADO
-                    pode_editar_instituicao = ?, 
-                    label_edita_instituicao = ?, 
-                    pode_editar_curso = ?, 
-                    label_edita_curso = ?, 
-                    idStatus = 2 
+                        razao_social = ?, nome_fantasia = ?, cnpj = ?, 
+                        pode_editar_instituicao = ?, label_edita_instituicao = ?, 
+                        pode_editar_curso = ?, label_edita_curso = ?, 
+                        valor_documento_nacional = ?, valor_frete = ?,
+                        idStatus = 2 
                     WHERE idInstituicao = ?";
 
             $this->db->prepare($sql)->execute([
-                $dados['razao_social'], 
-                $dados['nome_fantasia'], 
-                $dados['cnpj'],
-                $dados['insc_estadual'], 
-                $dados['insc_municipal'],
-                $dados['valor_documento_nacional'], // <-- ADICIONADO
-                $dados['valor_frete'],              // <-- ADICIONADO
-                $dados['pode_editar_instituicao'], 
-                $dados['label_edita_instituicao'],
-                $dados['pode_editar_curso'], 
-                $dados['label_edita_curso'],
+                $dados['razao_social'], $dados['nome_fantasia'], $dados['cnpj'],
+                $dados['pode_editar_instituicao'], $dados['label_edita_instituicao'],
+                $dados['pode_editar_curso'], $dados['label_edita_curso'],
+                $dados['valor_documento_nacional'], $dados['valor_frete'],
                 $id
             ]);
 

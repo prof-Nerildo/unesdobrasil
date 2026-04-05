@@ -56,7 +56,35 @@ http://localhost/unesdobrasil/saas/index.php/api/account/forgot-password
   "debug_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MiwiZW1haWwiOiJhdGVuZGltZW50b0B3ZWJkbmEuY29tLmJyIiwiaWRBY2wiOjIsInRpcG8iOiJyZWN1cGVyYWNhbyIsImlhdCI6MTc3NDgyMzE5MCwiZXhwIjoxNzc0ODUxOTkwfQ.KhM-T3etNS_8E3IzZiNn7wYpNrFl1CV66bV6K6jMnhg"
 }
 
+RESET banco de dados
 
+
+-- 1. Desativa as travas de segurança
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- 2. Limpa as tabelas de apoio (Endereço, Contato, Catraca)
+DELETE FROM endereco;
+DELETE FROM contato;
+DELETE FROM instituicao_catraca;
+
+-- 3. Deleta TODOS os usuários, EXCETO os seus dois mestres (IDs 1 e 2)
+DELETE FROM usuario WHERE idUsuario NOT IN (1, 2);
+
+-- 4. Limpa a tabela de instituições
+DELETE FROM instituicao;
+
+-- 5. Garante que seus Admins não fiquem presos a IDs de instituições antigas
+UPDATE usuario SET idInstituicao = NULL;
+
+-- 6. RESET DOS CONTADORES (O segredo para começar do 1 e do 3)
+ALTER TABLE instituicao AUTO_INCREMENT = 1;
+ALTER TABLE usuario AUTO_INCREMENT = 3;
+ALTER TABLE endereco AUTO_INCREMENT = 1;
+ALTER TABLE contato AUTO_INCREMENT = 1;
+ALTER TABLE instituicao_catraca AUTO_INCREMENT = 1;
+
+-- 7. Reativa as travas de segurança
+SET FOREIGN_KEY_CHECKS = 1;
 
 
 

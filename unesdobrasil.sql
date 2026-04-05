@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Apr 04, 2026 at 08:57 PM
+-- Generation Time: Apr 05, 2026 at 01:36 AM
 -- Server version: 8.4.3
 -- PHP Version: 8.3.26
 
@@ -193,7 +193,7 @@ CREATE TABLE `usuario` (
 
 INSERT INTO `usuario` (`idUsuario`, `idAcl`, `idStatus`, `idPerfil`, `idInstituicao`, `primeiro_nome`, `sobrenome`, `cargo`, `email`, `username`, `senha`, `reset_token`, `reset_token_expira_em`, `last_login`, `created_at`, `updated_at`) VALUES
 (1, 1, 2, 1, NULL, 'web', 'DNA', 'Dev', 'nviana@webdna.com.br', 'webDNA', '$2y$10$zBVIcNgys9zEWoY95h.Jwe17WoWM1kH.nZlLNqJ4OVzmN/WTYoZLS', NULL, NULL, '2026-04-01 09:35:35', '2026-03-30 00:19:47', '2026-04-01 12:35:35'),
-(2, 2, 2, 2, NULL, 'Nerildo', 'Viana', 'Dev WebDNA', 'atendimento@webdna.com.br', 'adminWebDNA', '$2y$10$QW1nBamYJ785JLq4jmBGU.QGRZLE2YLf/t.fBG9YB49VsTZeyEj0e', NULL, NULL, '2026-04-04 16:14:43', '2026-03-30 00:19:47', '2026-04-04 19:14:43');
+(2, 2, 2, 2, NULL, 'Nerildo', 'Viana', 'Dev WebDNA', 'atendimento@webdna.com.br', 'adminWebDNA', '$2y$10$QW1nBamYJ785JLq4jmBGU.QGRZLE2YLf/t.fBG9YB49VsTZeyEj0e', NULL, NULL, '2026-04-04 18:02:39', '2026-03-30 00:19:47', '2026-04-04 21:02:39');
 
 --
 -- Indexes for dumped tables
@@ -230,6 +230,7 @@ ALTER TABLE `instituicao`
 --
 ALTER TABLE `instituicao_catraca`
   ADD PRIMARY KEY (`idCatraca`),
+  ADD UNIQUE KEY `idInstituicao_2` (`idInstituicao`),
   ADD KEY `idInstituicao` (`idInstituicao`);
 
 --
@@ -270,25 +271,25 @@ ALTER TABLE `acl`
 -- AUTO_INCREMENT for table `contato`
 --
 ALTER TABLE `contato`
-  MODIFY `idContato` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `idContato` int NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `endereco`
 --
 ALTER TABLE `endereco`
-  MODIFY `idEndereco` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `idEndereco` int NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `instituicao`
 --
 ALTER TABLE `instituicao`
-  MODIFY `idInstituicao` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `idInstituicao` int NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `instituicao_catraca`
 --
 ALTER TABLE `instituicao_catraca`
-  MODIFY `idCatraca` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `idCatraca` int NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `perfil`
@@ -306,7 +307,7 @@ ALTER TABLE `status`
 -- AUTO_INCREMENT for table `usuario`
 --
 ALTER TABLE `usuario`
-  MODIFY `idUsuario` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `idUsuario` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- Constraints for dumped tables

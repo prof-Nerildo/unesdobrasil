@@ -209,7 +209,8 @@
         divErro.style.display = 'none';
 
         if(document.getElementById('pass').value !== document.getElementById('pass_conf').value) {
-            alert("As senhas não conferem!"); return;
+            alert("As senhas não conferem!"); 
+            return;
         }
 
         const dadosUser = {
@@ -226,8 +227,15 @@
         const res = await chamarApi('/account/register', 'POST', dadosUser);
 
         if (!res.erro) {
-            alert("Cadastro realizado com sucesso! Bem-vindo ao UNES.");
-            window.location.href = 'login.html';
+            // LIMPEZA PREVENTIVA: Garante que se o registro criou um token, 
+            // ele seja apagado para forçar o usuário a fazer login manualmente.
+            localStorage.removeItem('token_unes');
+            localStorage.removeItem('user_unes');
+
+            alert("Cadastro realizado com sucesso! Por favor, faça login para acessar o sistema.");
+            
+            // Usamos replace para trocar a página atual no histórico e evitar loops
+            window.location.replace('login.html');
         } else {
             divErro.innerText = "Erro: " + res.message;
             divErro.style.display = 'block';

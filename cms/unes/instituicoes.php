@@ -5,7 +5,7 @@
     <section class="main-section">
         <header class="top-bar">
             <h1>Gestão de Instituições</h1>
-            <button class="btn-novo" onclick="window.location.href='cadastro-instituicao.html'">
+            <button class="btn-novo" onclick="window.location.href='../cadastro-instituicao.html'">
                 <i class="fas fa-plus"></i> Nova Instituição
             </button>
         </header>
