@@ -9,6 +9,7 @@ header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-W
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { exit(); }
 
+// --- INCLUDES EXISTENTES ---
 require_once __DIR__ . '/Data/Database.php';
 require_once __DIR__ . '/Dependencies/JwtHandler.php';
 require_once __DIR__ . '/Dependencies/EmailHandler.php';
@@ -21,6 +22,11 @@ require_once __DIR__ . '/Models/RegisterRequestModelInstituicaoEnsino.php';
 require_once __DIR__ . '/Repositories/InstituicaoEnsinoRepository.php';
 require_once __DIR__ . '/Controllers/InstituicaoEnsinoController.php';
 
+// --- NOVOS INCLUDES (DOCUMENTOS ESTUDANTIS) ---
+require_once __DIR__ . '/Models/RegisterRequestModelDocumento.php';
+require_once __DIR__ . '/Repositories/DocumentoRepository.php';
+require_once __DIR__ . '/Controllers/DocumentoController.php';
+
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $method = $_SERVER['REQUEST_METHOD'];
 $dadosJson = json_decode(file_get_contents("php://input"), true) ?? [];
@@ -28,6 +34,9 @@ $dadosJson = json_decode(file_get_contents("php://input"), true) ?? [];
 $jwt = new \Dependencies\JwtHandler(); 
 $userController = new \Controllers\UsuarioController();
 $instController = new \Controllers\InstituicaoEnsinoController();
+
+// --- NOVO CONTROLLER ---
+$docController = new \Controllers\DocumentoController();
 
 $validarToken = function($nivelRequerido = null) use ($jwt) {
     $headers = getallheaders();
@@ -51,11 +60,10 @@ $validarToken = function($nivelRequerido = null) use ($jwt) {
 
 try {
     echo match (true) {
-        // LOGIN
+        // --- LOGIN E CONTA ---
         $method === 'POST' && str_contains($uri, '/api/account/login') => 
             $userController->login($dadosJson),
 
-        // CADASTRO USUÁRIO (PASSO 2)
         $method === 'POST' && str_contains($uri, '/api/account/register') => 
             $userController->register($dadosJson),
 
@@ -65,36 +73,35 @@ try {
         $method === 'PUT' && str_contains($uri, '/api/account/change-password') => 
             $userController->changePassword($dadosJson, $validarToken()),
 
-        // PERFIL (O JS chama isso ao carregar o Dashboard)
         $method === 'GET' && str_contains($uri, '/api/account/me') => 
             $userController->getMe($validarToken()),
 
-        // CADASTRO INSTITUIÇÃO (PASSO 1)
+        // --- INSTITUIÇÃO ---
         $method === 'POST' && str_contains($uri, '/api/instituicao/registrar') => 
             $instController->registrar($dadosJson),
 
-        // LISTAR TODAS (Dashboard precisa disso) - Removido nível 2 para teste
         $method === 'GET' && str_contains($uri, '/api/instituicao/todas') => 
             $instController->listarTodas($validarToken()),
 
-        // Adicione este caso dentro do seu try { echo match (true) { ... } }
         $method === 'PUT' && str_contains($uri, '/api/instituicao/status/') => 
             $instController->atualizarStatus(basename($uri), $dadosJson),
-
-        // No seu match (true)
-        $method === 'PUT' && str_contains($uri, '/api/instituicao/alterar/') => 
-            $instController->atualizarCompleto(basename($uri), $dadosJson),
 
         $method === 'GET' && str_contains($uri, '/api/instituicao/buscar/') => 
             $instController->buscarPorId(basename($uri)),
         
-        // Busca dados da Instituição pelo ID (O que o Dashboard e o Editar usam)
         $method === 'GET' && str_contains($uri, '/api/instituicao/detalhes/') => 
             $instController->buscarPorId(basename($uri)),
 
-        // Salva as alterações da Instituição (O que o botão Salvar usa)
         $method === 'PUT' && str_contains($uri, '/api/instituicao/atualizar/') => 
             $instController->atualizarCompleto(basename($uri), $dadosJson),
+
+        $method === 'PUT' && str_contains($uri, '/api/instituicao/alterar/') => 
+            $instController->atualizarCompleto(basename($uri), $dadosJson),
+
+        // --- NOVO: DOCUMENTO ESTUDANTIL ---
+        // Rota que o Adriano vai usar para salvar a nova carteirinha
+        $method === 'POST' && str_contains($uri, '/api/documento/registrar') => 
+            $docController->register($dadosJson, $validarToken()),
         
         default => throw new Exception("Endpoint não encontrado: " . $uri, 404)
     };

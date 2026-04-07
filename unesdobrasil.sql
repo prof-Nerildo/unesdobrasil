@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Apr 05, 2026 at 01:36 AM
+-- Generation Time: Apr 07, 2026 at 12:49 AM
 -- Server version: 8.4.3
 -- PHP Version: 8.3.26
 
@@ -56,6 +56,33 @@ CREATE TABLE `contato` (
   `tipo_contato` enum('celular','fixo','fax','email_secretaria') NOT NULL,
   `valor` varchar(150) NOT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `documento_estudantil`
+--
+
+CREATE TABLE `documento_estudantil` (
+  `idDocumento` int NOT NULL,
+  `idInsEnsino` int NOT NULL,
+  `idStatus` int DEFAULT '9',
+  `idUsuarioAlteracao` int DEFAULT NULL,
+  `tipoDocumento` varchar(20) DEFAULT 'Nacional',
+  `anoLetivo` int NOT NULL,
+  `idNac` varchar(12) NOT NULL,
+  `idCard` varchar(20) NOT NULL,
+  `NomeDocumento` varchar(100) NOT NULL,
+  `InsEnsinoDocumento` varchar(100) NOT NULL,
+  `serieDocumento` varchar(100) NOT NULL,
+  `nCPF` varchar(20) DEFAULT NULL,
+  `nRGDocumento` varchar(20) DEFAULT NULL,
+  `dataNascDocumento` date DEFAULT NULL,
+  `fotoDocumento` varchar(150) DEFAULT NULL,
+  `dataCriacao` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `dataAlteracao` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  `dataEntrega` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
@@ -160,7 +187,12 @@ INSERT INTO `status` (`idStatus`, `tipo`, `descricao`) VALUES
 (1, 'Inativo', 'Usuário bloqueado ou desativado'),
 (2, 'Ativo', 'Usuário/IstEnsino - com acesso liberado'),
 (3, 'Pendente', 'Instituição de Ensino aguardando aprovação'),
-(4, 'Suspenso', 'Instituição de Ensino aguardando regularização');
+(4, 'Suspenso', 'Instituição de Ensino aguardando regularização'),
+(5, 'Solicitado', 'Documento enviado pela escola e aguardando validação UNES'),
+(6, 'Em produção', 'Documento em processo de impressão ou confecção'),
+(7, 'Produzido', 'Documento finalizado, aguardando entrega ou retirada'),
+(8, 'Entregue', 'Documento entregue ao destino final (Escola/Aluno)'),
+(9, 'Criado', 'Rascunho de documento criado pela escola (ainda não solicitado)');
 
 -- --------------------------------------------------------
 
@@ -193,7 +225,7 @@ CREATE TABLE `usuario` (
 
 INSERT INTO `usuario` (`idUsuario`, `idAcl`, `idStatus`, `idPerfil`, `idInstituicao`, `primeiro_nome`, `sobrenome`, `cargo`, `email`, `username`, `senha`, `reset_token`, `reset_token_expira_em`, `last_login`, `created_at`, `updated_at`) VALUES
 (1, 1, 2, 1, NULL, 'web', 'DNA', 'Dev', 'nviana@webdna.com.br', 'webDNA', '$2y$10$zBVIcNgys9zEWoY95h.Jwe17WoWM1kH.nZlLNqJ4OVzmN/WTYoZLS', NULL, NULL, '2026-04-01 09:35:35', '2026-03-30 00:19:47', '2026-04-01 12:35:35'),
-(2, 2, 2, 2, NULL, 'Nerildo', 'Viana', 'Dev WebDNA', 'atendimento@webdna.com.br', 'adminWebDNA', '$2y$10$QW1nBamYJ785JLq4jmBGU.QGRZLE2YLf/t.fBG9YB49VsTZeyEj0e', NULL, NULL, '2026-04-04 18:02:39', '2026-03-30 00:19:47', '2026-04-04 21:02:39');
+(2, 2, 2, 2, NULL, 'Nerildo', 'Viana', 'Dev WebDNA', 'atendimento@webdna.com.br', 'adminWebDNA', '$2y$10$QW1nBamYJ785JLq4jmBGU.QGRZLE2YLf/t.fBG9YB49VsTZeyEj0e', NULL, NULL, '2026-04-06 20:53:18', '2026-03-30 00:19:47', '2026-04-06 23:53:18');
 
 --
 -- Indexes for dumped tables
@@ -210,6 +242,15 @@ ALTER TABLE `acl`
 --
 ALTER TABLE `contato`
   ADD PRIMARY KEY (`idContato`);
+
+--
+-- Indexes for table `documento_estudantil`
+--
+ALTER TABLE `documento_estudantil`
+  ADD PRIMARY KEY (`idDocumento`),
+  ADD UNIQUE KEY `uk_idCard` (`idCard`),
+  ADD KEY `fk_doc_instituicao` (`idInsEnsino`),
+  ADD KEY `fk_doc_status` (`idStatus`);
 
 --
 -- Indexes for table `endereco`
@@ -274,6 +315,12 @@ ALTER TABLE `contato`
   MODIFY `idContato` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `documento_estudantil`
+--
+ALTER TABLE `documento_estudantil`
+  MODIFY `idDocumento` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `endereco`
 --
 ALTER TABLE `endereco`
@@ -301,7 +348,7 @@ ALTER TABLE `perfil`
 -- AUTO_INCREMENT for table `status`
 --
 ALTER TABLE `status`
-  MODIFY `idStatus` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `idStatus` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `usuario`
@@ -312,6 +359,13 @@ ALTER TABLE `usuario`
 --
 -- Constraints for dumped tables
 --
+
+--
+-- Constraints for table `documento_estudantil`
+--
+ALTER TABLE `documento_estudantil`
+  ADD CONSTRAINT `fk_doc_instituicao` FOREIGN KEY (`idInsEnsino`) REFERENCES `instituicao` (`idInstituicao`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_doc_status` FOREIGN KEY (`idStatus`) REFERENCES `status` (`idStatus`) ON DELETE RESTRICT;
 
 --
 -- Constraints for table `instituicao`

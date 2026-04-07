@@ -37,7 +37,7 @@ async function chamarApi(endpoint, metodo = 'GET', dados = null) {
         // --- NOVO: LÓGICA DE ACL E PERMISSÃO ---
         if (response.status === 401 || response.status === 403) {
             const paginaAtual = window.location.pathname;
-            if (!paginaAtual.endsWith('login.html')) {
+            if (!paginaAtual.endsWith('../login.html')) {
                 localStorage.removeItem('token_unes');
                 localStorage.removeItem('user_unes'); // Limpa dados do usuário também
                 window.location.replace('../login.html');
