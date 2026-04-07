@@ -51,5 +51,35 @@ class DocumentoController {
         }
     }
 
+    public function listarPorStatus($idInst, $status = 9) {
+        try {
+            $dados = $this->repositoryDocumento->buscarPorInstituicaoEStatus($idInst, $status);
+            return json_encode(["erro" => false, "dados" => $dados]);
+        } catch (Exception $e) {
+            return json_encode(["erro" => true, "message" => $e->getMessage()]);
+        }
+    }
+    /**
+     * Altera o status do documento para Suspenso (4) através do Repository
+     */
+    public function suspenderDocumento($idCard) {
+        try {
+            if (empty($idCard)) {
+                return json_encode(["erro" => true, "message" => "idCard não informado."]);
+            }
+
+            // Chama o Repository corretamente
+            $sucesso = $this->repositoryDocumento->suspender($idCard);
+
+            return json_encode([
+                "erro" => !$sucesso, 
+                "message" => $sucesso ? "Documento suspenso com sucesso!" : "Não foi possível suspender."
+            ]);
+        } catch (Exception $e) {
+            // Importante: use \Exception ou garanta o 'use Exception' no topo
+            return json_encode(["erro" => true, "message" => "Erro no Controller: " . $e->getMessage()]);
+        }
+    }
+
     
 }

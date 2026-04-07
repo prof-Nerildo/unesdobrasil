@@ -32,6 +32,21 @@ class DocumentoRepository {
     }
 
     /**
+     * Busca documentos da instituição com status específico
+     */
+    public function buscarPorInstituicaoEStatus($idInst, $status = 9) {
+        $sql = "SELECT * FROM documento_estudantil 
+                WHERE idInsEnsino = :idInst AND idStatus = :status 
+                ORDER BY dataCriacao DESC";
+                
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':idInst' => $idInst, ':status' => $status]);
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+
+    /**
      * Cria o documento estudantil com lógica de ID sequencial e fuso horário BR
      */
     public function create(\Models\RegisterRequestModelDocumento $request) {
@@ -125,6 +140,19 @@ class DocumentoRepository {
             }
 
             throw new Exception("Erro no Repository: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Altera o status do documento para Suspenso (4)
+     */
+    public function suspender($idCard) {
+        try {
+            $sql = "UPDATE documento_estudantil SET idStatus = 4 WHERE idCard = :id";
+            $stmt = $this->db->prepare($sql);
+            return $stmt->execute([':id' => $idCard]);
+        } catch (Exception $e) {
+            throw new Exception("Erro ao suspender no Repository: " . $e->getMessage());
         }
     }
 }
