@@ -155,4 +155,88 @@ class DocumentoRepository {
             throw new Exception("Erro ao suspender no Repository: " . $e->getMessage());
         }
     }
+
+    public function buscarPorIdCard($idCard) {
+        $sql = "SELECT * FROM documento_estudantil WHERE idCard = :id LIMIT 1";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':id' => $idCard]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function update($idCard, $dados) {
+        try {
+            // 1. Lógica para atualizar a foto apenas se uma nova for enviada
+            $sqlFoto = "";
+            $params = [
+                ':nome'   => $dados['nome'],
+                ':escola' => $dados['escola'],
+                ':curso'  => $dados['curso'],
+                ':nasc'   => $dados['nascimento'],
+                ':cpf'    => $dados['cpf'],
+                ':rg'     => $dados['rg'],
+                ':idCard' => $idCard
+            ];
+
+            if (!empty($dados['foto'])) {
+                // Processa e salva a nova imagem física
+                $diretorioFotos = __DIR__ . '/../../img-validacao/fotos/';
+                $nomeArquivo = $idCard . ".jpg";
+                $fotoData = explode(',', $dados['foto']);
+                $imagemFinal = base64_decode(end($fotoData));
+                file_put_contents($diretorioFotos . $nomeArquivo, $imagemFinal);
+                
+                $sqlFoto = ", fotoDocumento = :foto";
+                $params[':foto'] = "img-validacao/fotos/" . $nomeArquivo;
+            }
+
+            $sql = "UPDATE documento_estudantil SET 
+                        NomeDocumento = :nome,
+                        InsEnsinoDocumento = :escola,
+                        serieDocumento = :curso,
+                        dataNascDocumento = :nasc,
+                        nCPF = :cpf,
+                        nRGDocumento = :rg
+                        $sqlFoto
+                    WHERE idCard = :idCard";
+
+            $stmt = $this->db->prepare($sql);
+            return $stmt->execute($params);
+
+        } catch (Exception $e) {
+            throw new Exception("Erro ao atualizar no Repository: " . $e->getMessage());
+        }
+    }
+
+    public function buscarResumoStatus($idInst) {
+        // SQL robusto que conta exatamente os IDs do seu novo padrão de banco
+        $sql = "SELECT 
+                    COUNT(CASE WHEN idStatus = 9 THEN 1 END) as criados,
+                    COUNT(CASE WHEN idStatus = 5 THEN 1 END) as solicitados,
+                    COUNT(CASE WHEN idStatus = 6 THEN 1 END) as producao,
+                    COUNT(CASE WHEN idStatus = 7 THEN 1 END) as produzidos,
+                    COUNT(CASE WHEN idStatus = 8 THEN 1 END) as entregues
+                FROM documento_estudantil 
+                WHERE idInsEnsino = :idInst";
+                
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':idInst' => $idInst]);
+        
+        // Retorna o array pronto: ["criados" => X, "solicitados" => Y, ...]
+        $resumo = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        // Garante que nenhum campo venha nulo para não quebrar o JS
+        return [
+            "criados"     => (int)($resumo['criados'] ?? 0),
+            "solicitados" => (int)($resumo['solicitados'] ?? 0),
+            "producao"    => (int)($resumo['producao'] ?? 0),
+            "produzidos"  => (int)($resumo['produzidos'] ?? 0),
+            "entregues"   => (int)($resumo['entregues'] ?? 0)
+        ];
+    }
+
+    public function mudarStatus($idCard, $status) {
+        $sql = "UPDATE documento_estudantil SET idStatus = :status WHERE idCard = :id";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([':status' => $status, ':id' => $idCard]);
+    }
 }

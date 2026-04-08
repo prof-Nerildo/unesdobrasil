@@ -48,4 +48,5 @@
     carregarDashboardInstituicao();
 </script>
 
+<script src="../js/dashboard-instituicao.js"></script>
 <?php include_once '../includes/footerUnes-2.php'; ?>

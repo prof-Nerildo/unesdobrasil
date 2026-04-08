@@ -1,3 +1,4 @@
+// VARIÁVEIS GLOBAIS
 let cropper;
 let fotoFinalBase64 = "";
 let todosDocumentos = [];
@@ -5,6 +6,13 @@ let paginaAtual = 1;
 const itensPorPagina = 10;
 let dadosOriginaisInst = { nome: "", curso: "", podeEditarInst: "nao", podeEditarCurso: "nao" };
 
+// VARIÁVEIS DE CONTROLE DE EDIÇÃO
+let modoEdicao = false;
+let idCardEdicao = null;
+
+/**
+ * Inicialização da Página
+ */
 async function prepararPagina() {
     const user = obterUsuario();
     if (!user) { window.location.href = '../login.html'; return; }
@@ -26,25 +34,40 @@ async function prepararPagina() {
     } catch (e) { console.error(e); }
 }
 
+/**
+ * Aplica os dados da instituição nos campos fixos ou liberados
+ */
 function aplicarDadosPadrao() {
     const campoInst = document.getElementById('nome_escola_fixo');
     const campoCurso = document.getElementById('curso_aluno');
+    
     campoInst.value = dadosOriginaisInst.podeEditarInst === 'sim' ? "" : dadosOriginaisInst.nome;
     campoInst.readOnly = dadosOriginaisInst.podeEditarInst !== 'sim';
+    
     campoCurso.value = dadosOriginaisInst.podeEditarCurso === 'sim' ? "" : dadosOriginaisInst.curso;
     campoCurso.readOnly = dadosOriginaisInst.podeEditarCurso !== 'sim';
+    
     campoInst.style.background = campoInst.readOnly ? "#f8fafc" : "#fff";
     campoCurso.style.background = campoCurso.readOnly ? "#f8fafc" : "#fff";
 }
 
+/**
+ * Busca documentos com status 'Criado' (9)
+ */
 async function listarDocumentosCriados() {
     const user = obterUsuario();
     try {
         const res = await chamarApi(`/documento/listar-criados/${user.idInstituicao}`);
-        if (!res.erro) { todosDocumentos = res.dados; renderizarTabela(); }
+        if (!res.erro) { 
+            todosDocumentos = res.dados; 
+            renderizarTabela(); 
+        }
     } catch (e) { console.error(e); }
 }
 
+/**
+ * Renderiza a tabela com Filtro e Paginação
+ */
 function renderizarTabela() {
     const corpo = document.getElementById('tabela_docs_corpo');
     const busca = document.getElementById('busca_documento').value.toLowerCase();
@@ -74,8 +97,8 @@ function renderizarTabela() {
                 <td><img src="../../${d.fotoDocumento}" class="img-table-thumb"></td>
                 <td>${dCriacao}</td>
                 <td>
-                    <button class="btn-edit-table" onclick="abrirEdicaoDoc('${d.idCard}')"><i class="far fa-edit"></i></button>
-                    <button class="btn-delete-table" onclick="excluirDoc('${d.idCard}')"><i class="far fa-trash-alt"></i></button>
+                    <button class="btn-edit-table" onclick="abrirEdicaoDoc('${d.idCard}')" title="Editar"><i class="far fa-edit"></i></button>
+                    <button class="btn-delete-table" onclick="excluirDoc('${d.idCard}')" title="Excluir"><i class="far fa-trash-alt"></i></button>
                 </td>
             </tr>`;
     });
@@ -96,6 +119,9 @@ function renderPaginacao(total) {
 function mudarPagina(p) { paginaAtual = p; renderizarTabela(); }
 function filtrarDocumentos() { paginaAtual = 1; renderizarTabela(); }
 
+/**
+ * Limpa o formulário e reseta o Modo Edição
+ */
 function limparCamposAluno() {
     ['nome_aluno', 'data_nascimento', 'cpf_aluno', 'rg_aluno'].forEach(id => document.getElementById(id).value = "");
     fotoFinalBase64 = "";
@@ -103,33 +129,71 @@ function limparCamposAluno() {
     document.getElementById('wrapper-crop').style.display = 'none';
     document.getElementById('input_foto').value = "";
     if (cropper) cropper.destroy();
+    
+    // Reseta estados de edição
+    modoEdicao = false;
+    idCardEdicao = null;
+    
+    // Volta visual original
+    document.querySelector('.top-bar h1').innerHTML = `<i class="fas fa-plus-circle"></i> Criar Documento Estudantil`;
+    const btnSucesso = document.querySelector('.btn-sucesso-footer');
+    btnSucesso.innerHTML = '<i class="fas fa-save"></i> FINALIZAR E ADICIONAR DOCUMENTO';
+    btnSucesso.style.background = '#1abc9c';
+
     aplicarDadosPadrao();
     document.getElementById('nome_aluno').focus();
 }
 
+/**
+ * Modo Edição: Carrega dados no formulário
+ */
+async function abrirEdicaoDoc(idCard) {
+    try {
+        const res = await chamarApi(`/documento/detalhes/${idCard}`);
+        if (res.erro) { alert(res.message); return; }
+
+        const doc = res.dados;
+        modoEdicao = true;
+        idCardEdicao = idCard;
+
+        // Preenche campos
+        document.getElementById('nome_aluno').value = doc.NomeDocumento;
+        document.getElementById('nome_escola_fixo').value = doc.InsEnsinoDocumento;
+        document.getElementById('curso_aluno').value = doc.serieDocumento;
+        document.getElementById('data_nascimento').value = doc.dataNascDocumento;
+        document.getElementById('cpf_aluno').value = doc.nCPF;
+        document.getElementById('rg_aluno').value = doc.nRGDocumento;
+
+        // Mostra a foto atual
+        document.getElementById('wrapper-crop').style.display = 'none';
+        document.getElementById('preview-final').style.display = 'block';
+        document.getElementById('foto_cortada_resultado').src = `../../${doc.fotoDocumento}`;
+        fotoFinalBase64 = ""; 
+
+        // Altera UI
+        document.querySelector('.top-bar h1').innerHTML = `<i class="fas fa-edit"></i> Editando Documento: ${idCard}`;
+        const btnSucesso = document.querySelector('.btn-sucesso-footer');
+        btnSucesso.innerHTML = '<i class="fas fa-sync-alt"></i> SALVAR ALTERAÇÕES';
+        btnSucesso.style.background = '#f6ad55';
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (e) { console.error(e); }
+}
+
+/**
+ * Lógica do Cropper
+ */
 function iniciarCrop(event) {
     const file = event.target.files[0];
     if (!file) return;
-
     const reader = new FileReader();
     reader.onload = function(e) {
         const image = document.getElementById('image-to-crop');
         image.src = e.target.result;
-        
-        // Exibe o wrapper ANTES de iniciar o Cropper
         document.getElementById('wrapper-crop').style.display = 'block';
         document.getElementById('preview-final').style.display = 'none';
-
         if (cropper) cropper.destroy();
-        
-        // Inicializa o Cropper com a imagem carregada
-        cropper = new Cropper(image, { 
-            aspectRatio: 3 / 4, 
-            viewMode: 1,
-            autoCropArea: 1,
-            responsive: true,
-            restore: false
-        });
+        cropper = new Cropper(image, { aspectRatio: 3/4, viewMode: 1 });
     };
     reader.readAsDataURL(file);
 }
@@ -143,33 +207,28 @@ function cortarFoto() {
     document.getElementById('preview-final').style.display = 'block';
 }
 
+/**
+ * Suspender Documento (idStatus = 4)
+ */
 async function excluirDoc(idCard) {
-    // Usando um confirm simples ou SweetAlert se você tiver
-    const confirmar = confirm(`Deseja realmente suspender o documento ${idCard}? Ele sairá da lista de ativos.`);
-    
-    if (!confirmar) return;
-
+    if (!confirm(`Deseja suspender o documento ${idCard}?`)) return;
     try {
         const res = await chamarApi(`/documento/suspender/${idCard}`, 'POST');
-        
-        if (!res.erro) {
-            alert("✅ Documento suspenso com sucesso!");
-            // RECARREGA A TABELA (Sincronizado com a paginação)
-            listarDocumentosCriados(); 
-        } else {
-            alert("❌ Erro: " + res.message);
-        }
-    } catch (error) {
-        console.error("Erro ao suspender:", error);
-        alert("🚫 Falha na comunicação com o servidor.");
-    }
+        if (!res.erro) { listarDocumentosCriados(); }
+        else { alert(res.message); }
+    } catch (e) { console.error(e); }
 }
 
-
+/**
+ * Salvar: Pode ser Novo Registro ou Atualização
+ */
 async function adicionarDocumento() {
     const btn = document.querySelector('.btn-sucesso-footer');
-    if(!fotoFinalBase64) { alert("⚠️ Corte a foto do aluno."); return; }
     const user = obterUsuario();
+
+    // Se for NOVO, a foto é obrigatória. Se for EDIÇÃO, pode manter a antiga.
+    if(!modoEdicao && !fotoFinalBase64) { alert("⚠️ Selecione e corte a foto."); return; }
+
     const dados = {
         idInstituicao: user.idInstituicao,
         idUsuario: user.id,
@@ -179,23 +238,29 @@ async function adicionarDocumento() {
         nascimento: document.getElementById('data_nascimento').value,
         cpf: document.getElementById('cpf_aluno').value.trim(),
         rg: document.getElementById('rg_aluno').value.trim(),
-        foto: fotoFinalBase64
+        foto: fotoFinalBase64 // Se vazio na edição, o PHP mantém a antiga
     };
+
     if (!dados.nome || !dados.escola || !dados.curso || !dados.nascimento || !dados.cpf || !dados.rg) {
-        alert("⚠️ Todos os campos são obrigatórios."); return;
+        alert("⚠️ Preencha todos os campos obrigatórios."); return;
     }
+
+    const endpoint = modoEdicao ? `/documento/atualizar/${idCardEdicao}` : '/documento/registrar';
+    
     btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> PROCESSANDO...';
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SALVANDO...';
+
     try {
-        const res = await chamarApi('/documento/registrar', 'POST', dados);
+        const res = await chamarApi(endpoint, 'POST', dados);
         if (!res.erro) {
-            alert("✅ Sucesso! ID: " + res.id);
+            alert(modoEdicao ? "✅ Atualizado!" : "✅ Criado!");
             limparCamposAluno();
             listarDocumentosCriados();
-        } else { alert("❌ " + res.message); }
-    } catch (e) { alert("🚫 Erro na conexão."); }
+        } else { alert(res.message); }
+    } catch (e) { alert("🚫 Erro de conexão."); }
+    
     btn.disabled = false;
-    btn.innerHTML = '<i class="fas fa-save"></i> FINALIZAR E ADICIONAR DOCUMENTO';
+    btn.innerHTML = modoEdicao ? '<i class="fas fa-sync-alt"></i> SALVAR ALTERAÇÕES' : '<i class="fas fa-save"></i> FINALIZAR E ADICIONAR DOCUMENTO';
 }
 
 document.addEventListener('DOMContentLoaded', prepararPagina);

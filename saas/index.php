@@ -99,6 +99,35 @@ try {
         // ROTA DE SUSPENSÃO (EXCLUSÃO)
         $method === 'POST' && str_contains($uri, '/api/documento/suspender/') => 
             $docController->suspenderDocumento(basename($uri)),
+
+        // Adicione esta rota GET para carregar os dados
+        $method === 'GET' && str_contains($uri, '/api/documento/detalhes/') => 
+            $docController->buscarDetalhes(basename($uri)),
+        
+        // ROTA PARA ATUALIZAR O DOCUMENTO
+        $method === 'POST' && str_contains($uri, '/api/documento/atualizar/') => 
+            $docController->atualizarDocumento(basename($uri), $dadosJson),
+
+        $method === 'GET' && str_contains($uri, '/api/documento/resumo-dashboard/') => 
+            $docController->resumoDashboard(basename($uri)),
+
+        // Listar documentos por qualquer status (DINÂMICO E SEGURO)
+        $method === 'GET' && str_contains($uri, '/api/documento/listar-por-status/') => (function() use ($uri, $docController) {
+            // Remove barras vazias e divide a URL
+            $partes = explode('/', rtrim($uri, '/'));
+            
+            // Pegamos os dois últimos valores da URL independente de quantas pastas existam antes
+            $status = end($partes); 
+            $idInst = prev($partes); 
+            
+            return $docController->listarPorStatusGenerico($idInst, $status);
+        })(),
+        // ROTA PARA ALTERAR STATUS DO DOCUMENTO (AVANÇAR)
+        $method === 'PUT' && str_contains($uri, '/api/documento/status/') => (function() use ($uri, $dadosJson, $docController) {
+            $partes = explode('/', rtrim($uri, '/'));
+            $idCard = end($partes);
+            return $docController->atualizarStatusDoc($idCard, $dadosJson);
+        })(),
         
         default => throw new Exception("Endpoint não encontrado: " . $uri, 404)
     };
