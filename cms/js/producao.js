@@ -59,7 +59,7 @@ async function filtrarProducao(idStatus, label) {
                     acaoHTML = `<button class="btn-sucesso" onclick="avancarStatus('${d.idCard}', ${idStatus})">AVANÇAR <i class="fas fa-arrow-right"></i></button>`;
                 } else if (idStatus == 9) {
                     // INSTITUIÇÃO: Só vê botão no status 9 (CRIADO)
-                    acaoHTML = `<button class="btn-sucesso" onclick="avancarStatus('${d.idCard}', ${idStatus})">SOLICITAR <i class="fas fa-paper-plane"></i></button>`;
+                    acaoHTML = `<button class="btn-sucesso" onclick="avancarStatus('${d.idCard}', ${idStatus})"><i class="fas fa-paper-plane"></i> SOLICITAR </button>`;
                 } else {
                     // BLOQUEIO PARA INSTITUIÇÃO: Após solicitado, apenas visualiza
                     acaoHTML = `<span style="color: #a0aec0; font-size: 10px; font-weight: bold;"><i class="fas fa-lock"></i> EM ANÁLISE</span>`;

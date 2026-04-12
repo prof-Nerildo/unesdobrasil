@@ -22,7 +22,7 @@ async function carregarEstatisticasDashboard() {
             console.error("Erro da API:", res.message);
         }async function carregarEstatisticasDashboard() {
     const user = obterUsuario();
-    if (!user || !user.idInstituicao) return;
+    if (!user || !user.idInstituicao) return; 
 
     try {
         const res = await chamarApi(`/documento/resumo-dashboard/${user.idInstituicao}`);
@@ -48,6 +48,22 @@ async function carregarEstatisticasDashboard() {
 document.addEventListener('DOMContentLoaded', carregarEstatisticasDashboard);
     } catch (error) {
         console.error("Erro ao carregar estatísticas:", error);
+    }
+}
+
+/**
+ * Redireciona para a página correta com base no status clicado
+ * @param {string} status - O nome do status vindo do card
+ */
+function navegarFiltroDoc(status) {
+    // Se clicar no card de Entregues, vai para a página de histórico final
+    if (status === 'entregue') {
+        window.location.href = 'entregues.php';
+    } 
+    // Para todos os outros status (Criado, Solicitado, Produção, Produzido), 
+    // vai para a tela de gestão de produção
+    else {
+        window.location.href = 'em-producao.php';
     }
 }
 
