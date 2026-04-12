@@ -77,5 +77,19 @@ class InstituicaoEnsinoController {
         $dados = $this->repoInst->findById($id);
         return json_encode(["erro" => false, "dados" => $dados]);
     }
+
+    public function atualizarPerfilInstituicao($id, $dadosJson) {
+        try {
+            // Chamaremos um método novo no Repository que protege os campos sensíveis
+            $sucesso = $this->repoInst->updatePerfilPelaInstituicao($id, $dadosJson);
+            
+            return json_encode([
+                "erro" => false, 
+                "message" => "Dados cadastrais atualizados com sucesso!"
+            ]);
+        } catch (Exception $e) {
+            return json_encode(["erro" => true, "message" => $e->getMessage()]);
+        }
+    }
     
 }

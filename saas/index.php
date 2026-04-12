@@ -128,6 +128,10 @@ try {
             $idCard = end($partes);
             return $docController->atualizarStatusDoc($idCard, $dadosJson);
         })(),
+
+        // NOVA ROTA: Atualiza apenas dados permitidos para a própria escola
+        $method === 'PUT' && str_contains($uri, '/api/instituicao/perfil-atualizar/') => 
+            $instController->atualizarPerfilInstituicao(basename($uri), $dadosJson),
         
         default => throw new Exception("Endpoint não encontrado: " . $uri, 404)
     };

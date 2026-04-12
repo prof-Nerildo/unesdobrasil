@@ -101,6 +101,48 @@ class InstituicaoEnsinoRepository {
         }
     }
 
+    public function updatePerfilPelaInstituicao($id, $dados) {
+        try {
+            if (!$this->db->inTransaction()) { $this->db->beginTransaction(); }
+
+            // 1. ATUALIZA APENAS O BÁSICO (RAZÃO E FANTASIA)
+            // Note que NÃO tem idStatus, NÃO tem frete, NÃO tem valor_documento aqui.
+            $sql = "UPDATE instituicao SET razao_social = ?, nome_fantasia = ? WHERE idInstituicao = ?";
+            $this->db->prepare($sql)->execute([
+                $dados['razao_social'] ?? '', 
+                $dados['nome_fantasia'] ?? '', 
+                $id
+            ]);
+
+            // 2. ATUALIZA ENDEREÇO (Igual ao que você já tem)
+            $sqlEnd = "UPDATE endereco SET 
+                        cep = ?, logradouro = ?, numero = ?, complemento = ?, bairro = ?, cidade = ?, uf = ? 
+                    WHERE idReferencia = ? AND tipo_entidade = 'instituicao'";
+            $this->db->prepare($sqlEnd)->execute([
+                $dados['cep'] ?? '', $dados['logradouro'] ?? '', $dados['numero'] ?? '', 
+                $dados['complemento'] ?? '', $dados['bairro'] ?? '', $dados['cidade'] ?? '', 
+                $dados['uf'] ?? '', $id
+            ]);
+
+            // 3. ATUALIZA CONTATOS (Lógica para não duplicar)
+            $contatos = [
+                ['tipo' => 'email_secretaria', 'valor' => $dados['email_contato'] ?? ''],
+                ['tipo' => 'fixo', 'valor' => $dados['telefone'] ?? '']
+            ];
+            foreach ($contatos as $c) {
+                $upd = "UPDATE contato SET valor = ? WHERE idReferencia = ? AND tipo_entidade = 'instituicao' AND tipo_contato = ?";
+                $stmt = $this->db->prepare($upd);
+                $stmt->execute([$c['valor'], $id, $c['tipo']]);
+            }
+
+            $this->db->commit();
+            return true;
+        } catch (Exception $e) {
+            if ($this->db->inTransaction()) $this->db->rollBack();
+            throw new Exception($e->getMessage());
+        }
+    }
+    
     public function updateCompleto($id, $dados) {
         try {
             if (!$this->db->inTransaction()) {

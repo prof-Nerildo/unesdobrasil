@@ -190,7 +190,7 @@ async function salvarAlteracoes() {
     }
 
     try {
-        const res = await chamarApi(`/api/instituicao/atualizar/${id}`, 'PUT', dados);
+        const res = await chamarApi(`/api/instituicao/perfil-atualizar/${id}`, 'PUT', dados);
         if(!res.erro) {
             alert("✅ Dados atualizados com sucesso!");
         } else {
