@@ -91,5 +91,17 @@ class InstituicaoEnsinoController {
             return json_encode(["erro" => true, "message" => $e->getMessage()]);
         }
     }
+
+    public function resumoDashboardUnes() {
+        try {
+            $dados = $this->repoInst->resumoDashboardUnes(); 
+            if (!$dados) {
+                return json_encode(["erro" => false, "dados" => ["validar" => 0, "sem_catraca" => 0, "com_catraca" => 0]]);
+            }
+            return json_encode(["erro" => false, "dados" => $dados]);
+        } catch (Exception $e) {
+            return json_encode(["erro" => true, "message" => $e->getMessage()]);
+        }
+    }
     
 }

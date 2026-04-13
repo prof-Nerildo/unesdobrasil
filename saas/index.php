@@ -1,7 +1,7 @@
 <?php
-// 1. Configurações de Erro (Em produção, display_errors deve ser 0)
+// 1. Configurações de Erro
 error_reporting(E_ALL); 
-ini_set('display_errors', 1); // Deixe 1 para debugar, depois mude para 0
+ini_set('display_errors', 1); 
 
 // 2. Headers de API
 header("Access-Control-Allow-Origin: *");
@@ -29,7 +29,7 @@ try {
     require_once __DIR__ . '/Controllers/DocumentoController.php';
 
     // --- SETUP ---
-    $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+    $uri = isset($_GET['url']) ? $_GET['url'] : parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
     $method = $_SERVER['REQUEST_METHOD'];
     $dadosJson = json_decode(file_get_contents("php://input"), true) ?? [];
 
@@ -44,11 +44,7 @@ try {
         $auth = $headers['Authorization'] ?? $headers['authorization'] ?? '';
         $token = str_replace('Bearer ', '', $auth);
         $dados = $jwt->decode($token);
-        
-        if (!$dados) { 
-            throw new Exception("Sessão expirada.", 401); 
-        }
-        
+        if (!$dados) { throw new Exception("Sessão expirada.", 401); }
         if ($nivelRequerido !== null && $dados['idAcl'] != $nivelRequerido) { 
             throw new Exception("Acesso negado.", 403);
         }
@@ -58,80 +54,83 @@ try {
     // --- ROTEAMENTO (MATCH) ---
     $response = match (true) {
         // LOGIN E CONTA
-        $method === 'POST' && str_contains($uri, '/api/account/login') => 
+        $method === 'POST' && str_contains($uri, 'api/account/login') => 
             $userController->login($dadosJson),
 
-        $method === 'POST' && str_contains($uri, '/api/account/register') => 
+        $method === 'POST' && str_contains($uri, 'api/account/register') => 
             $userController->register($dadosJson),
 
-        $method === 'POST' && str_contains($uri, '/api/account/forgot-password') => 
+        $method === 'POST' && str_contains($uri, 'api/account/forgot-password') => 
             $userController->forgotPassword($dadosJson),
 
-        $method === 'PUT' && str_contains($uri, '/api/account/change-password') => 
+        $method === 'PUT' && str_contains($uri, 'api/account/change-password') => 
             $userController->changePassword($dadosJson, $validarToken()),
 
-        $method === 'GET' && str_contains($uri, '/api/account/me') => 
+        $method === 'GET' && str_contains($uri, 'api/account/me') => 
             $userController->getMe($validarToken()),
 
         // INSTITUIÇÃO
-        $method === 'POST' && str_contains($uri, '/api/instituicao/registrar') => 
+        $method === 'POST' && str_contains($uri, 'api/instituicao/registrar') => 
             $instController->registrar($dadosJson),
 
-        $method === 'GET' && str_contains($uri, '/api/instituicao/todas') => 
+        $method === 'GET' && str_contains($uri, 'api/instituicao/todas') => 
             $instController->listarTodas($validarToken()),
 
-        $method === 'PUT' && str_contains($uri, '/api/instituicao/status/') => 
+        $method === 'PUT' && str_contains($uri, 'api/instituicao/status/') => 
             $instController->atualizarStatus(basename($uri), $dadosJson),
 
-        $method === 'GET' && str_contains($uri, '/api/instituicao/buscar/') || str_contains($uri, '/api/instituicao/detalhes/') => 
+        $method === 'GET' && (str_contains($uri, 'api/instituicao/buscar/') || str_contains($uri, 'api/instituicao/detalhes/')) => 
             $instController->buscarPorId(basename($uri)),
 
-        $method === 'PUT' && str_contains($uri, '/api/instituicao/atualizar/') || str_contains($uri, '/api/instituicao/alterar/') => 
+        $method === 'PUT' && (str_contains($uri, 'api/instituicao/atualizar/') || str_contains($uri, 'api/instituicao/alterar/')) => 
             $instController->atualizarCompleto(basename($uri), $dadosJson),
 
+        $method === 'PUT' && str_contains($uri, 'api/instituicao/perfil-atualizar/') => 
+            $instController->atualizarPerfilInstituicao(basename($uri), $dadosJson),
+
+        $method === 'GET' && str_contains($uri, 'api/instituicao/resumo-unes') => 
+            $instController->resumoDashboardUnes(),
+
         // DOCUMENTO ESTUDANTIL
-        $method === 'POST' && str_contains($uri, '/api/documento/registrar') => 
+        $method === 'POST' && str_contains($uri, 'api/documento/registrar') => 
             $docController->register($dadosJson, $validarToken()),
         
-        $method === 'GET' && str_contains($uri, '/api/documento/listar-criados/') => 
+        $method === 'GET' && str_contains($uri, 'api/documento/listar-criados/') => 
             $docController->listarPorStatus(basename($uri), 9),
 
-        // ROTA DE SUSPENSÃO (EXCLUSÃO)
-        $method === 'POST' && str_contains($uri, '/api/documento/suspender/') => 
+        $method === 'POST' && str_contains($uri, 'api/documento/suspender/') => 
             $docController->suspenderDocumento(basename($uri)),
 
-        // Adicione esta rota GET para carregar os dados
-        $method === 'GET' && str_contains($uri, '/api/documento/detalhes/') => 
+        $method === 'GET' && str_contains($uri, 'api/documento/detalhes/') => 
             $docController->buscarDetalhes(basename($uri)),
         
-        // ROTA PARA ATUALIZAR O DOCUMENTO
-        $method === 'POST' && str_contains($uri, '/api/documento/atualizar/') => 
+        $method === 'POST' && str_contains($uri, 'api/documento/atualizar/') => 
             $docController->atualizarDocumento(basename($uri), $dadosJson),
 
-        $method === 'GET' && str_contains($uri, '/api/documento/resumo-dashboard/') => 
+        $method === 'GET' && str_contains($uri, 'api/documento/resumo-dashboard/') => 
             $docController->resumoDashboard(basename($uri)),
 
-        // Listar documentos por qualquer status (DINÂMICO E SEGURO)
-        $method === 'GET' && str_contains($uri, '/api/documento/listar-por-status/') => (function() use ($uri, $docController) {
-            // Remove barras vazias e divide a URL
+        $method === 'GET' && str_contains($uri, 'api/documento/listar-por-status/') => (function() use ($uri, $docController) {
             $partes = explode('/', rtrim($uri, '/'));
-            
-            // Pegamos os dois últimos valores da URL independente de quantas pastas existam antes
             $status = end($partes); 
             $idInst = prev($partes); 
-            
             return $docController->listarPorStatusGenerico($idInst, $status);
         })(),
-        // ROTA PARA ALTERAR STATUS DO DOCUMENTO (AVANÇAR)
-        $method === 'PUT' && str_contains($uri, '/api/documento/status/') => (function() use ($uri, $dadosJson, $docController) {
-            $partes = explode('/', rtrim($uri, '/'));
-            $idCard = end($partes);
+
+        $method === 'PUT' && str_contains($uri, 'api/documento/status/') => (function() use ($uri, $dadosJson, $docController) {
+            $idCard = basename(rtrim($uri, '/'));
             return $docController->atualizarStatusDoc($idCard, $dadosJson);
         })(),
 
-        // NOVA ROTA: Atualiza apenas dados permitidos para a própria escola
-        $method === 'PUT' && str_contains($uri, '/api/instituicao/perfil-atualizar/') => 
-            $instController->atualizarPerfilInstituicao(basename($uri), $dadosJson),
+        $method === 'GET' && str_contains($uri, 'api/documento/resumo-global') => 
+            $docController->resumoGlobal(),
+
+        $method === 'GET' && str_contains($uri, 'api/documento/producao-global/') => 
+            $docController->listarProducaoGlobal(basename(rtrim($uri, '/'))),
+
+        // ROTA PARA GERAR LOTE (POST)
+        $method === 'POST' && str_contains($uri, 'api/documento/gerar-lote') => 
+            $docController->gerarLoteZip($dadosJson),
         
         default => throw new Exception("Endpoint não encontrado: " . $uri, 404)
     };
@@ -139,7 +138,6 @@ try {
     echo $response;
 
 } catch (Exception $e) {
-    // Garante que o erro sempre seja um JSON válido
     http_response_code($e->getCode() < 100 || $e->getCode() > 599 ? 500 : $e->getCode());
     echo json_encode([
         "erro" => true, 

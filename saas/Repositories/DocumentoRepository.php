@@ -239,4 +239,69 @@ class DocumentoRepository {
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([':status' => $status, ':id' => $idCard]);
     }
+
+    public function resumoDashboardGlobal() {
+        $sql = "SELECT 
+                    COUNT(CASE WHEN idStatus = 9 THEN 1 END) as criados,
+                    COUNT(CASE WHEN idStatus = 5 THEN 1 END) as solicitados,
+                    COUNT(CASE WHEN idStatus = 6 THEN 1 END) as producao,
+                    COUNT(CASE WHEN idStatus = 7 THEN 1 END) as produzidos,
+                    COUNT(CASE WHEN idStatus = 8 THEN 1 END) as entregues
+                FROM documento_estudantil";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetch(\PDO::FETCH_ASSOC);
+    }
+
+    
+
+    public function listarProducaoGlobal($status) {
+        try {
+            // Adicionamos o LIMIT 5000 para evitar sobrecarga no Array do JavaScript
+            // Mantemos o ORDER BY dataCriacao DESC para que os mais novos apareçam primeiro
+            $sql = "SELECT * FROM documento_estudantil 
+                    WHERE idStatus = :status 
+                    ORDER BY dataCriacao DESC 
+                    LIMIT 5000";
+                    
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindValue(':status', $status, \PDO::PARAM_INT);
+            $stmt->execute();
+            
+            return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            throw new Exception("Erro ao listar produção: " . $e->getMessage());
+        }
+    }
+
+    public function atualizarStatusViradaDeDia() {
+        try {
+            // Altera de "Criado" (9) para "Solicitado" (5) 
+            // se a data de criação for menor que o dia atual (CURDATE)
+            $sql = "UPDATE documento_estudantil 
+                    SET idStatus = 5 
+                    WHERE idStatus = 9 
+                    AND DATE(dataCriacao) < CURDATE()";
+            
+            $stmt = $this->db->prepare($sql);
+            return $stmt->execute();
+        } catch (Exception $e) {
+            // Não travamos o sistema por isso, apenas logamos se necessário
+            return false;
+        }
+    }
+
+    public function buscarDadosParaLote(array $ids) {
+        // 1. Cria os placeholders (?, ?, ?) para os IDs
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        
+        // 2. Busca os dados exatos desses documentos para montar o Excel
+        $sql = "SELECT * FROM documento_estudantil WHERE idCard IN ($placeholders)";
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($ids);
+        
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
 }

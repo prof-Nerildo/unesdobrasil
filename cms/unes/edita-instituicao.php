@@ -1,5 +1,5 @@
 <?php include_once '../includes/headerUnes.php'; ?>
-<?php include_once '../includes/sidebaUnes.php'; ?>
+<?php include_once '../includes/sidebarUnes.php'; ?>
 
 <main class="content">
     <section class="main-section">

@@ -241,4 +241,23 @@ class InstituicaoEnsinoRepository {
             throw new Exception("Erro ao buscar dados: " . $e->getMessage());
         }
     }
+
+    public function resumoDashboardUnes() {
+        try {
+            // SQL corrigido para o nome real da sua tabela: instituicao
+            $sql = "SELECT 
+                        COUNT(CASE WHEN idStatus = 3 THEN 1 END) as validar,
+                        COUNT(CASE WHEN usa_catraca = 'nao' OR usa_catraca IS NULL THEN 1 END) as sem_catraca,
+                        COUNT(CASE WHEN usa_catraca = 'sim' THEN 1 END) as com_catraca
+                    FROM instituicao i
+                    LEFT JOIN instituicao_catraca ic ON i.idInstituicao = ic.idInstituicao";
+                    
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute();
+            
+            return $stmt->fetch(\PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            throw new Exception("Erro SQL no Resumo: " . $e->getMessage());
+        }
+    }
 }
