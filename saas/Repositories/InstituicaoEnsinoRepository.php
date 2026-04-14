@@ -25,32 +25,39 @@ class InstituicaoEnsinoRepository {
                 $model->nome_fantasia, 
                 $model->cnpj
             ]);
+            
+            // PEGA O ID GERADO (que agora começará em 301)
             $idInst = $this->db->lastInsertId();
 
-            // 2. Grava o Endereço (CONTAGEM CORRIGIDA: 8 campos e 8 valores)
+            // --- AQUI ENTRA A CORREÇÃO ---
+            // Faz com que o idLegado seja igual ao idInstituicao para novos cadastros
+            $sqlUpdLegado = "UPDATE instituicao SET idLegado = ? WHERE idInstituicao = ?";
+            $this->db->prepare($sqlUpdLegado)->execute([$idInst, $idInst]);
+            // -----------------------------
+
+            // 2. Grava o Endereço
+            // Note que adicionei o campo 'complemento' aqui para bater com sua tabela
             $sqlEnd = "INSERT INTO endereco (idReferencia, tipo_entidade, cep, logradouro, numero, complemento, bairro, cidade, uf) 
                        VALUES (?, 'instituicao', ?, ?, ?, ?, ?, ?, ?)";
             $stmtEnd = $this->db->prepare($sqlEnd);
             $stmtEnd->execute([
-                $idInst,           // 1
-                $model->cep,       // 2
-                $model->logradouro,// 3
-                $model->numero,    // 4
-                $model->complemento,// 5 (ESTE ESTAVA FALTANDO NA CONTAGEM!)
-                $model->bairro,    // 6
-                $model->cidade,    // 7
-                $model->uf         // 8
+                $idInst,           // idReferencia (ID novo 301...)
+                $model->cep, 
+                $model->logradouro,
+                $model->numero,
+                $model->complemento ?? '', // Garantindo que não vá nulo
+                $model->bairro, 
+                $model->cidade, 
+                $model->uf
             ]);
 
-            // 3. Grava os Contatos na tabela 'contato'
+            // 3. Grava os Contatos
             $sqlCont = "INSERT INTO contato (idReferencia, tipo_entidade, tipo_contato, valor) VALUES (?, 'instituicao', ?, ?)";
             $stmtCont = $this->db->prepare($sqlCont);
 
-            // E-mail da escola
             if (!empty($model->email_contato)) {
                 $stmtCont->execute([$idInst, 'email_secretaria', $model->email_contato]);
             }
-            // Telefone Fixo
             if (!empty($model->telefone)) {
                 $stmtCont->execute([$idInst, 'fixo', $model->telefone]);
             }

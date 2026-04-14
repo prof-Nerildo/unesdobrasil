@@ -93,10 +93,10 @@ SET FOREIGN_KEY_CHECKS = 1;
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- 2. Limpa as tabelas de apoio (Endereço, Contato, Catraca)
-DELETE FROM documento_estudantil;
+DELETE FROM usuario;
 
 -- 6. RESET DOS CONTADORES (O segredo para começar do 1 e do 3)
-ALTER TABLE documento_estudantil AUTO_INCREMENT = 1;
+ALTER TABLE usuario AUTO_INCREMENT = 1;
 -- 7. Reativa as travas de segurança
 SET FOREIGN_KEY_CHECKS = 1;
 

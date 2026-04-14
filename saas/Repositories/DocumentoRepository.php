@@ -47,11 +47,12 @@ class DocumentoRepository {
 
 
     /**
-     * Cria o documento estudantil com lógica de ID sequencial e fuso horário BR
+     * Cria o documento estudantil com lógica de ID sequencial, fuso horário BR
+     * e suporte ao ID Legado (Coringa para sistema 1.0)
      */
     public function create(\Models\RegisterRequestModelDocumento $request) {
         try {
-            // 0. AJUSTE DE FUSO HORÁRIO (Garante horário de Brasília na Contabo/EUA)
+            // 0. AJUSTE DE FUSO HORÁRIO
             date_default_timezone_set('America/Sao_Paulo');
             $anoAtualBr = date('Y');
 
@@ -59,7 +60,21 @@ class DocumentoRepository {
                 $this->db->beginTransaction();
             }
 
-            // 1. LÓGICA DO IDNAC E IDCARD
+            // --- NOVIDADE: BUSCA A INSTITUIÇÃO PARA VERIFICAR ID LEGADO ---
+            $sqlInst = "SELECT idInstituicao, idLegado FROM instituicao WHERE idInstituicao = :id";
+            $stmtInst = $this->db->prepare($sqlInst);
+            $stmtInst->execute([':id' => $request->idInsEnsino]);
+            $inst = $stmtInst->fetch(PDO::FETCH_ASSOC);
+
+            if (!$inst) {
+                throw new Exception("Instituição não encontrada.");
+            }
+
+            // LÓGICA DO CORINGA: Se idLegado existe, usa ele. Senão, usa o idInstituicao.
+            $codigoIdentificador = !empty($inst['idLegado']) ? $inst['idLegado'] : $inst['idInstituicao'];
+            // --------------------------------------------------------------
+
+            // 1. LÓGICA DO IDNAC (Sequencial por instituição/ano)
             $sqlMax = "SELECT MAX(CAST(idNac AS UNSIGNED)) as ultimo 
                        FROM documento_estudantil 
                        WHERE idInsEnsino = :idInst AND anoLetivo = :ano";
@@ -75,7 +90,8 @@ class DocumentoRepository {
             $idNac = str_pad($proximoSequencial, 4, "0", STR_PAD_LEFT);
             
             // DNA UNES: Ano(4) + Inst(4) + Nac(4)
-            $idInstFormat = str_pad($request->idInsEnsino, 4, "0", STR_PAD_LEFT);
+            // Aqui usamos o $codigoIdentificador (que pode ser o 173 ou o 11)
+            $idInstFormat = str_pad($codigoIdentificador, 4, "0", STR_PAD_LEFT);
             $idCard = $anoAtualBr . $idInstFormat . $idNac;
 
             // 2. PROCESSAMENTO DA FOTO
@@ -91,7 +107,7 @@ class DocumentoRepository {
             $caminhoCompletoArquivo = $diretorioFotos . $nomeArquivo;
 
             if (file_put_contents($caminhoCompletoArquivo, $imagemFinal) === false) {
-                throw new Exception("Falha ao salvar a imagem em: " . $diretorioFotos);
+                throw new Exception("Falha ao salvar a imagem.");
             }
 
             // 3. INSERÇÃO NO BANCO
@@ -109,13 +125,13 @@ class DocumentoRepository {
             
             $stmt = $this->db->prepare($sql);
             $stmt->execute([
-                ':idInst'  => $request->idInsEnsino,
+                ':idInst'  => $request->idInsEnsino, // Aqui SEMPRE salvamos o ID 11 (FK do banco)
                 ':idStatus'=> $request->idStatus,
                 ':idUser'  => $request->idUsuarioAlteracao,
                 ':tipo'    => $request->tipoDocumento,
                 ':ano'     => $anoAtualBr,
                 ':idNac'   => $idNac,
-                ':idCard'  => $idCard,
+                ':idCard'  => $idCard, // Aqui vai o ID com 173 (Interface/Documento)
                 ':nome'    => $request->nomeAluno,
                 ':escola'  => $request->nomeEscola,
                 ':curso'   => $request->serieCurso,
@@ -133,8 +149,6 @@ class DocumentoRepository {
                 $this->db->rollBack();
             }
 
-            // --- TRATAMENTO DE DUPLICIDADE (UNIQUE KEY DO BANCO) ---
-            // Código 23000 é erro de integridade (Duplicate Entry) no MySQL
             if ($e->getCode() == 23000 || str_contains($e->getMessage(), '1062 Duplicate entry')) {
                 throw new Exception("Este CPF já possui um documento registrado para o ano letivo atual.");
             }
@@ -142,6 +156,7 @@ class DocumentoRepository {
             throw new Exception("Erro no Repository: " . $e->getMessage());
         }
     }
+    
 
     /**
      * Altera o status do documento para Suspenso (4)

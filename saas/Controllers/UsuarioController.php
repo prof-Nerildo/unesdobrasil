@@ -51,15 +51,33 @@ class UsuarioController {
                 return json_encode(["erro" => true, "message" => "Usuário não encontrado."]);
             }
 
-            // Validação da Senha
-            $stringComplexa = $this->montarStringCriptografia($senhaInput, $user->getEmail());
-            $senhaOk = password_verify($stringComplexa, $user->getSenha());
+            // --- LÓGICA DE VALIDAÇÃO COM TRANSIÇÃO DE SENHA ---
+            $senhaOk = false;
+            $senhaPrecisaAtualizar = false;
 
-            if (!$senhaOk) {
-                $senhaOk = password_verify($senhaInput, $user->getSenha());
+            // 1. Tenta o padrão complexo novo (String Complexa + Bcrypt)
+            $stringComplexa = $this->montarStringCriptografia($senhaInput, $user->getEmail());
+            if (password_verify($stringComplexa, $user->getSenha())) {
+                $senhaOk = true;
+            } 
+            // 2. Tenta o padrão simples (Bcrypt direto na senha pura)
+            else if (password_verify($senhaInput, $user->getSenha())) {
+                $senhaOk = true;
+            }
+            // 3. Tenta o PADRÃO ANTIGO (Texto Limpo - Migrado do sistema antigo)
+            else if ($senhaInput === $user->getSenha()) {
+                $senhaOk = true;
+                $senhaPrecisaAtualizar = true; // Marca que precisamos salvar o hash novo
             }
 
             if ($senhaOk) {
+                // Se a senha estava em texto limpo, salvamos o hash agora para segurança máxima
+                if ($senhaPrecisaAtualizar) {
+                    // Usamos o padrão complexo do seu sistema novo
+                    $novoHashSeguro = password_hash($stringComplexa, PASSWORD_BCRYPT);
+                    $this->repositoryUsuario->updateSenha($user->getEmail(), $novoHashSeguro);
+                }
+
                 $tokenData = [
                     "id" => $user->getIdUsuario(),
                     "nome" => $user->getPrimeiroNome(),
@@ -74,7 +92,7 @@ class UsuarioController {
                     "erro" => false,
                     "message" => "Login realizado com sucesso!",
                     "token" => $token,
-                    "usuario" => $user->toArray() // Usa o método toArray do Model que ajustamos
+                    "usuario" => $user->toArray()
                 ]);
             }
 
