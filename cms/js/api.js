@@ -1,6 +1,9 @@
 // 1. Proteção contra redeclaração
 if (typeof API_URL === 'undefined') {
+    //  Local
     var API_URL = "http://localhost/unesdobrasil/saas/index.php/api";
+    // web teste
+    //var API_URL = "https://www.webdna.com.br/unes/saas/index.php/api";
 }
 
 async function chamarApi(endpoint, metodo = 'GET', dados = null) {

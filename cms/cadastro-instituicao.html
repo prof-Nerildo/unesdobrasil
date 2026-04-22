@@ -4,25 +4,60 @@
     <meta charset="UTF-8">
     <title>UNES - Cadastro Institucional</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #e9ecef; padding: 20px; color: #495057; }
-        .container { max-width: 800px; margin: auto; }
-        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin-bottom: 20px; }
-        h2 { border-bottom: 2px solid #dee2e6; padding-bottom: 10px; margin-bottom: 20px; color: #212529; font-size: 1.5rem; }
-        h3 { font-size: 1.1rem; margin-top: 25px; color: #0d6efd; text-transform: uppercase; letter-spacing: 1px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; padding: 20px; color: #495057; }
+        .container { max-width: 900px; margin: auto; }
+        .card { background: white; padding: 35px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        
+        /* Título com a barrinha laranja igual ao seu Dashboard */
+        .section-title {
+            display: flex;
+            align-items: center;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 30px 0 15px 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .section-title::before {
+            content: "";
+            width: 4px;
+            height: 22px;
+            background: #f39c12;
+            margin-right: 12px;
+            border-radius: 2px;
+        }
+
+        h2 { margin-top: 0; color: #2c3e50; border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 10px; }
         
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .grid-3 { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 15px; }
         .full-width { grid-column: span 2; }
         
-        label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9rem; }
-        input, select { width: 100%; padding: 12px; border: 1px solid #ced4da; border-radius: 6px; box-sizing: border-box; font-size: 1rem; transition: border-color 0.2s; }
-        input:focus { border-color: #86b7fe; outline: none; box-shadow: 0 0 0 0.25rem rgba(13,110,253,.25); }
+        label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 0.85rem; color: #6c757d; }
+        input, select { 
+            width: 100%; padding: 10px; border: 1px solid #dee2e6; border-radius: 6px; 
+            box-sizing: border-box; font-size: 0.95rem; transition: 0.2s;
+        }
+        input:focus { border-color: #f39c12; outline: none; box-shadow: 0 0 0 0.2rem rgba(243, 156, 18, 0.1); }
+
+        .btn-action { 
+            width: 100%; padding: 15px; color: white; border: none; border-radius: 6px; 
+            cursor: pointer; font-size: 1.1rem; font-weight: bold; margin-top: 30px; 
+            transition: 0.2s;
+        }
+        .btn-next { background: #198754; } /* Verde para o Próximo */
+        .btn-next:hover { background: #146c43; }
         
-        .btn-next { width: 100%; padding: 15px; background: #198754; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1.1rem; font-weight: bold; margin-top: 20px; }
-        .btn-next:hover { background: #157347; }
+        .btn-finish { background: #0d6efd; } /* Azul para o Finalizar */
+        .btn-finish:hover { background: #0a58ca; }
+
         .step { display: none; }
-        .active { display: block; }
-        .msg-erro { color: #dc3545; background: #f8d7da; padding: 10px; border-radius: 6px; margin-top: 15px; display: none; }
+        .active { display: block; animation: fadeIn 0.4s; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .msg-erro { color: #dc3545; background: #f8d7da; padding: 12px; border-radius: 6px; margin-top: 20px; display: none; font-size: 0.9rem; border: 1px solid #f5c2c7; }
     </style>
 </head>
 <body>
@@ -30,8 +65,9 @@
 <div class="container">
     <div id="passo1" class="step active">
         <div class="card">
-            <h2>Dados da Instituição</h2>
+            <h2>Novo Cadastro Institucional</h2>
             
+            <div class="section-title">Dados Cadastrais</div>
             <div class="grid">
                 <div class="full-width">
                     <label>Razão Social</label>
@@ -55,15 +91,15 @@
                 </div>
             </div>
 
-            <h3>Endereço</h3>
+            <div class="section-title">Localização</div>
             <div class="grid-3">
                 <div class="full-width">
-                    <label>Endereço</label>
-                    <input type="text" id="rua" placeholder="Logradouro, Av, Rua...">
+                    <label>Endereço (Logradouro)</label>
+                    <input type="text" id="rua" placeholder="Av, Rua, Travessa...">
                 </div>
                 <div>
                     <label>Nº</label>
-                    <input type="text" id="num" placeholder="Nº">
+                    <input type="text" id="num" placeholder="Ex: 123">
                 </div>
                 <div>
                     <label>Complemento</label>
@@ -87,15 +123,17 @@
                         <option value="SP">SP</option>
                         <option value="RJ">RJ</option>
                         <option value="MG">MG</option>
+                        <option value="PR">PR</option>
+                        <option value="SC">SC</option>
                     </select>
                 </div>
             </div>
 
-            <h3>Contato</h3>
+            <div class="section-title">Contatos</div>
             <div class="grid">
                 <div class="full-width">
                     <label>E-mail Institucional</label>
-                    <input type="email" id="email_inst" placeholder="contato@escola.com">
+                    <input type="email" id="email_inst" placeholder="secretaria@instituicao.com">
                 </div>
                 <div>
                     <label>Telefone</label>
@@ -107,7 +145,7 @@
                 </div>
             </div>
 
-            <button class="btn-next" onclick="salvarInstituicao()">PRÓXIMO PASSO</button>
+            <button class="btn-action btn-next" onclick="salvarInstituicao()">PRÓXIMO PASSO</button>
             <div id="err1" class="msg-erro"></div>
         </div>
     </div>
@@ -116,6 +154,7 @@
         <div class="card">
             <h2>Dados do Administrador</h2>
             
+            <div class="section-title">Informações Pessoais</div>
             <div class="grid">
                 <div>
                     <label>Primeiro Nome</label>
@@ -126,12 +165,12 @@
                     <input type="text" id="s_nome" placeholder="Sobrenome">
                 </div>
                 <div class="full-width">
-                    <label>Cargo</label>
-                    <input type="text" id="cargo" placeholder="Ex: Diretor, Dev, TI...">
+                    <label>Cargo / Função</label>
+                    <input type="text" id="cargo" placeholder="Ex: Diretor, TI, Coordenador">
                 </div>
                 <div class="full-width">
                     <label>E-mail Pessoal</label>
-                    <input type="email" id="email_user" placeholder="nome@email.com">
+                    <input type="email" id="email_user" placeholder="nome@provedor.com">
                 </div>
                 <div>
                     <label>Telefone Residencial</label>
@@ -143,11 +182,11 @@
                 </div>
             </div>
 
-            <h3>Acesso ao Sistema</h3>
+            <div class="section-title">Acesso ao Sistema</div>
             <div class="grid">
                 <div class="full-width">
                     <label>Usuário (Login)</label>
-                    <input type="text" id="user" placeholder="Escolha um nome de usuário">
+                    <input type="text" id="user" placeholder="Escolha um nome de usuário único">
                 </div>
                 <div>
                     <label>Senha</label>
@@ -159,7 +198,7 @@
                 </div>
             </div>
 
-            <button class="btn-next" style="background: #0d6efd;" onclick="finalizarUsuario()">FINALIZAR CADASTRO</button>
+            <button class="btn-action btn-finish" onclick="finalizarUsuario()">FINALIZAR CADASTRO</button>
             <div id="err2" class="msg-erro"></div>
         </div>
     </div>
@@ -199,7 +238,7 @@
             document.getElementById('passo2').classList.add('active');
             window.scrollTo(0,0);
         } else {
-            divErro.innerText = "Erro: " + res.message;
+            divErro.innerText = "Erro: " + (res.message || "Falha na comunicação.");
             divErro.style.display = 'block';
         }
     }
@@ -227,17 +266,12 @@
         const res = await chamarApi('/account/register', 'POST', dadosUser);
 
         if (!res.erro) {
-            // LIMPEZA PREVENTIVA: Garante que se o registro criou um token, 
-            // ele seja apagado para forçar o usuário a fazer login manualmente.
             localStorage.removeItem('token_unes');
             localStorage.removeItem('user_unes');
-
-            alert("Cadastro realizado com sucesso! Por favor, faça login para acessar o sistema.");
-            
-            // Usamos replace para trocar a página atual no histórico e evitar loops
+            alert("Cadastro realizado com sucesso!");
             window.location.replace('login.html');
         } else {
-            divErro.innerText = "Erro: " + res.message;
+            divErro.innerText = "Erro: " + (res.message || "Falha no registro.");
             divErro.style.display = 'block';
         }
     }
