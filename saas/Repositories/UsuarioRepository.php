@@ -13,12 +13,12 @@ class UsuarioRepository {
 
     public function create(\Models\RegisterRequestModelUsuario $request) {
         try {
-            if (!$this->db->inTransaction()) {
-                $this->db->beginTransaction();
-            }
+            date_default_timezone_set('America/Sao_Paulo');
+            $agora = date('Y-m-d H:i:s');
+            if (!$this->db->inTransaction()) { $this->db->beginTransaction(); }
 
-            $sql = "INSERT INTO usuario (idAcl, idStatus, idPerfil, idInstituicao, primeiro_nome, sobrenome, cargo, email, username, senha) 
-                    VALUES (:idAcl, :idStatus, :idPerfil, :idInst, :primeiro_nome, :sobrenome, :cargo, :email, :username, :senha)";
+            $sql = "INSERT INTO usuario (idAcl, idStatus, idPerfil, idInstituicao, primeiro_nome, sobrenome, cargo, email, username, senha, dataCriacao) 
+                    VALUES (:idAcl, :idStatus, :idPerfil, :idInst, :primeiro_nome, :sobrenome, :cargo, :email, :username, :senha, :data)";
             
             $stmt = $this->db->prepare($sql);
             $stmt->execute([
@@ -31,7 +31,8 @@ class UsuarioRepository {
                 ':cargo'         => $request->cargo,
                 ':email'         => $request->email,
                 ':username'      => $request->username,
-                ':senha'         => $request->senha 
+                ':senha'         => $request->senha,
+                ':data'          => $agora
             ]);
 
             $idUsuario = $this->db->lastInsertId();
@@ -43,29 +44,30 @@ class UsuarioRepository {
 
             $this->db->commit();
             return $idUsuario;
-
         } catch (Exception $e) {
             if ($this->db->inTransaction()) $this->db->rollBack();
             throw new Exception("Erro ao criar usuário: " . $e->getMessage());
         }
     }
 
-    public function findByLogin($login) {
-        // 1. Usamos nomes diferentes (:email e :user) para não confundir o PDO
-        $sql = "SELECT * FROM usuario WHERE email = :email OR username = :user LIMIT 1";
-        
+    public function updateLastLogin($idUsuario) {
+        date_default_timezone_set('America/Sao_Paulo');
+        $agora = date('Y-m-d H:i:s');
+        $sql = "UPDATE usuario SET last_login = :agora WHERE idUsuario = :id";
         $stmt = $this->db->prepare($sql);
-        
-        // 2. Passamos o mesmo valor ($login) para as duas "vagas"
+        return $stmt->execute([':agora' => $agora, ':id' => $idUsuario]);
+    }
+
+    public function findByLogin($login) {
+        $sql = "SELECT * FROM usuario WHERE email = :email OR username = :user LIMIT 1";
+        $stmt = $this->db->prepare($sql);
         $stmt->bindValue(':email', $login);
         $stmt->bindValue(':user', $login);
-        
         $stmt->execute();
         
-        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
         if (!$row) return null;
 
-        // 3. Monta o objeto com os dados do banco
         $user = new \Data\Models\Usuario();
         $user->setIdUsuario($row['idUsuario']);
         $user->setIdAcl($row['idAcl']);
@@ -73,7 +75,6 @@ class UsuarioRepository {
         $user->setPrimeiroNome($row['primeiro_nome']);
         $user->setEmail($row['email']);
         $user->setSenha($row['senha']);
-        
         return $user;
     }
 
@@ -83,12 +84,6 @@ class UsuarioRepository {
         $stmt->execute([':email' => $email, ':username' => $username]);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         return ($result['total'] ?? 0) > 0;
-    }
-
-    public function updateLastLogin($idUsuario) {
-        $sql = "UPDATE usuario SET last_login = NOW() WHERE idUsuario = :id";
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute([':id' => $idUsuario]);
     }
 
     public function findMe($idUsuario) {
@@ -104,16 +99,8 @@ class UsuarioRepository {
     }
 
     public function updateSenha($email, $novaSenhaHash) {
-        try {
-            // Verifique se o nome da tabela é 'usuario' e a coluna é 'senha'
-            $sql = "UPDATE usuario SET senha = :senha WHERE email = :email";
-            $stmt = $this->db->prepare($sql);
-            return $stmt->execute([
-                ':senha' => $novaSenhaHash,
-                ':email' => $email
-            ]);
-        } catch (Exception $e) {
-            throw new Exception("Erro ao atualizar senha no banco: " . $e->getMessage());
-        }
+        $sql = "UPDATE usuario SET senha = :senha WHERE email = :email";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([':senha' => $novaSenhaHash, ':email' => $email]);
     }
 }

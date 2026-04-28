@@ -76,16 +76,18 @@
                 <table class="table-unes">
                     <thead>
                         <tr>
-                            
-                            <th>IDCARD</th>
-                            <th>NOME COMPLETO</th>
-                            <th>INST. ENSINO</th>
-                            <th>SÉRIE/CURSO</th>
-                            <th>CPF</th>
+                            <th style="cursor:pointer" onclick="ordenarEsteira('idCard')">IDCARD <i class="fas fa-sort" id="sort-idCard"></i></th>
+                            <th style="cursor:pointer" onclick="ordenarEsteira('NomeDocumento')">NOME <i class="fas fa-sort" id="sort-NomeDocumento"></i></th>
+                            <th style="cursor:pointer" onclick="ordenarEsteira('InsEnsinoDocumento')">INST. ENSINO <i class="fas fa-sort" id="sort-InsEnsinoDocumento"></i></th>
+                            <th style="cursor:pointer" onclick="ordenarEsteira('serieDocumento')">CURSO <i class="fas fa-sort" id="sort-serieDocumento"></i></th>
+                            <th style="cursor:pointer" onclick="ordenarEsteira('nCPF')">CPF <i class="fas fa-sort" id="sort-nCPF"></i></th>
                             <th>RG</th>
-                            <th>NASCIMENTO</th>
+                            <th style="cursor:pointer" onclick="ordenarEsteira('dataNascDocumento')">NASC. <i class="fas fa-sort" id="sort-dataNascDocumento"></i></th>
                             <th class="text-center">FOTO</th>
-                            <th class="text-center">DATA SOLICITAÇÃO</th>
+                            
+                            <th style="cursor:pointer" onclick="ordenarEsteira('dataCriacao')">SOLICITAÇÃO <i class="fas fa-sort" id="sort-dataCriacao"></i></th>
+                            <th style="cursor:pointer" onclick="ordenarEsteira('dataAlteracao')">ALTUALIZAÇÃO <i class="fas fa-sort" id="sort-dataAlteracao"></i></th> 
+                            <th class="text-center">AÇÃO</th>
                         </tr>
                     </thead>
                     <tbody id="tabelaProducaoCorpo"></tbody>
@@ -110,6 +112,127 @@
     
     .text-bold { font-weight: 700; color: #2c3e50; }
     .img-table-thumb { width: 40px; height: 50px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd; }
+    .text-center { text-align: center; }
+/* Deixa a hora um pouco menor para dar destaque à data */
+.table-unes td small {
+    display: block;
+    margin-top: 2px;
+    font-size: 11px;
+}
+
+.btn-mini-acao {
+    border: none;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: 0.2s;
+}
+.btn-mini-acao:hover {
+    transform: scale(1.1);
+    filter: brightness(1.2);
+}
+.text-center { text-align: center; }
+.table-unes td small { display: block; margin-top: 2px; font-size: 11px; }
+#paginador-v2 {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    padding: 20px;
+}
+
+.btn-pag-item, .btn-pag-nav {
+    background: #fff;
+    color: #4a5568;
+    border: 1px solid #e2e8f0;
+    padding: 6px 12px;
+    cursor: pointer;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 13px;
+    transition: all 0.2s;
+}
+
+.btn-pag-active {
+    background: #3182ce;
+    color: #fff;
+    border: 1px solid #3182ce;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: 700;
+    box-shadow: 0 4px 6px rgba(49, 130, 206, 0.2);
+}
+
+.btn-pag-item:hover, .btn-pag-nav:hover {
+    background: #f7fafc;
+    border-color: #cbd5e0;
+}
+table th i {
+    margin-left: 5px;
+    font-size: 10px;
+    color: #cbd5e0; /* Cor neutra inicial */
+}
+
+table th:hover i {
+    color: #3182ce; /* Fica azul quando passa o mouse */
+}
+
+/* Estilo para os mini botões de ação */
+.btn-mini-acao {
+    border: none;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: 0.2s;
+}
+.btn-mini-acao:hover { transform: scale(1.1); filter: brightness(1.2); }
+
+/* 1. TRAVA A LARGURA DA TABELA */
+.table-unes {
+    width: 100%;
+    table-layout: fixed; /* Força o respeito às larguras que definirmos */
+    border-collapse: collapse;
+}
+
+/* 2. AJUSTE INDIVIDUAL POR COLUNA */
+.table-unes th:nth-child(1), .table-unes td:nth-child(1) { width: 110px; } /* IDCARD */
+.table-unes th:nth-child(2), .table-unes td:nth-child(2) { width: auto;  } /* NOME (Cresce livre) */
+.table-unes th:nth-child(3), .table-unes td:nth-child(3) { width: 150px; } /* INST. ENSINO */
+.table-unes th:nth-child(4), .table-unes td:nth-child(4) { width: 130px; } /* CURSO */
+.table-unes th:nth-child(5), .table-unes td:nth-child(5) { width: 115px; } /* CPF */
+.table-unes th:nth-child(6), .table-unes td:nth-child(6) { width: 100px; } /* RG */
+.table-unes th:nth-child(7), .table-unes td:nth-child(7) { width: 90px;  } /* NASC. */
+.table-unes th:nth-child(8), .table-unes td:nth-child(8) { width: 65px;  } /* FOTO */
+.table-unes th:nth-child(9), .table-unes td:nth-child(9) { width: 100px; } /* SOLICIT. */
+.table-unes th:nth-child(10), .table-unes td:nth-child(10) { width: 100px; } /* ÚLT. ALT. */
+.table-unes th:nth-child(11), .table-unes td:nth-child(11) { width: 60px;  } /* AÇÃO */
+
+/* 3. TRATAMENTO DE TEXTO LONGO */
+.table-unes td {
+    white-space: nowrap;      /* Não deixa o texto quebrar linha */
+    overflow: hidden;         /* Esconde o que sobrar */
+    text-overflow: ellipsis;  /* Coloca "..." se o nome da faculdade for gigante */
+    padding: 10px 8px;
+}
+
+/* 4. AJUSTE ESPECIAL PARA AS DATAS (PARA CABER A HORA EMBAIXO) */
+.table-unes td:nth-child(9), 
+.table-unes td:nth-child(10) {
+    white-space: normal;      /* Deixa a data e hora quebrarem linha */
+    line-height: 1.1;
+    font-size: 11px;
+}
+
+/* 5. HOVER NOS TÍTULOS */
+.table-unes th {
+    white-space: nowrap;
+    font-size: 10px !important;
+    background: #f1f5f9;
+}
 </style>
 
 <script src="../js/producao-global.js"></script>

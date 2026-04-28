@@ -22,10 +22,18 @@
             <table width="100%">
                 <thead>
                     <tr>
-                        <th>Código</th>
-                        <th>Cidade</th>
-                        <th>Nome Fantasia</th>
-                        <th>Responsável</th>
+                        <th onclick="ordenarPor('idLegado')" style="cursor:pointer">
+                            Código <i class="fas fa-sort" id="sort-idLegado"></i>
+                        </th>
+                        <th onclick="ordenarPor('cidade')" style="cursor:pointer">
+                            Cidade <i class="fas fa-sort" id="sort-cidade"></i>
+                        </th>
+                        <th onclick="ordenarPor('nome_fantasia')" style="cursor:pointer">
+                            Nome Fantasia <i class="fas fa-sort" id="sort-nome_fantasia"></i>
+                        </th>
+                        <th onclick="ordenarPor('responsavel')" style="cursor:pointer">
+                            Responsável <i class="fas fa-sort" id="sort-responsavel"></i>
+                        </th>
                         <th>Telefone</th>
                         <th>E-mail</th>
                         <th style="text-align: center;">Ações</th>
@@ -74,19 +82,100 @@
     .btn-pag { padding: 8px 14px; border: 1px solid #dee2e6; background: white; cursor: pointer; border-radius: 4px; transition: 0.3s; }
     .btn-pag:hover { background: #f8f9fa; }
     .btn-pag.active { background: #2c3e50; color: white; border-color: #2c3e50; }
+
+    .paginacao-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin: 30px 0;
+}
+
+.btn-pag {
+    min-width: 40px;
+    height: 40px;
+    padding: 0 10px;
+    border: 1px solid #e0e0e0;
+    background: #fff;
+    color: #555;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-pag:hover {
+    background: #f0f0f0;
+    border-color: #bbb;
+}
+
+.btn-pag.active {
+    background: #2c3e50;
+    color: #fff;
+    border-color: #2c3e50;
+    box-shadow: 0 4px 10px rgba(44, 62, 80, 0.2);
+}
+
+table th {
+    transition: background 0.3s;
+}
+table th:hover {
+    background-color: #f1f1f1;
+    color: #2c3e50;
+}
+
+/* Trava a largura da coluna de Código */
+table th:first-child, 
+table td:first-child {
+    width: 80px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+/* Coluna de Ações: Largura fixa e botões lado a lado */
+table th:last-child, 
+table td:last-child {
+    width: 100px;
+    text-align: center;
+}
+
+.acoes-flex {
+    display: flex;
+    justify-content: center;
+    gap: 10px; /* Espaço entre os botões */
+}
+
+/* Evita que o nome da cidade ou escola quebre em muitas linhas */
+table td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px; /* Ajuste conforme necessário */
+}
+table th i {
+    margin-left: 8px;
+    font-size: 11px;
+    color: #3182ce;
+    transition: 0.3s;
+}
+
+table th:hover {
+    background-color: #f7fafc !important;
+    color: #3182ce;
+}
 </style>
 
 <script>
-    let todasInstituicoes = []; // Base de dados bruta
-    let listaFiltrada = [];    // Base de dados após filtros de cards e busca
+    let todasInstituicoes = []; 
+    let listaFiltrada = [];    
     let paginaAtual = 1;
     const itensPorPagina = 10;
-    let filtroAtivo = 'todos'; // Guarda qual card está selecionado
+    let filtroAtivo = 'todos'; 
 
     async function inicializarPagina() {
         const corpo = document.getElementById('corpoTabela');
         try {
-            // Chama a função global e guarda o resultado na nossa variável local
+            // 1. Carrega os dados do banco através da API
             todasInstituicoes = await atualizarCards(); 
             
             const urlParams = new URLSearchParams(window.location.search);
@@ -100,49 +189,19 @@
         }
     }
 
-    // Filtro dos Cards (Status/Catraca)
     function aplicarFiltro(tipo) {
         filtroAtivo = tipo;
-        
         if (tipo === '3') {
             listaFiltrada = todasInstituicoes.filter(i => parseInt(i.idStatus) === 3);
         } else if (tipo === 'nao') {
-            listaFiltrada = todasInstituicoes.filter(i => parseInt(i.idStatus) === 2 && (i.usa_catraca === 'nao' || !i.usa_catraca));
+            listaFiltrada = todasInstituicoes.filter(i => i.usa_catraca === 'nao' || !i.usa_catraca);
         } else if (tipo === 'sim') {
-            listaFiltrada = todasInstituicoes.filter(i => parseInt(i.idStatus) === 2 && i.usa_catraca === 'sim');
+            listaFiltrada = todasInstituicoes.filter(i => i.usa_catraca === 'sim');
         } else {
             listaFiltrada = todasInstituicoes;
         }
-        
         paginaAtual = 1;
-        renderizarTabela(); // Atualiza a tabela na tela
-    }
-    // Filtro de Busca (Texto)
-    function filtrarPorTexto() {
-        const termo = document.getElementById('inputBusca').value.toLowerCase();
-        
-        // Primeiro aplica o filtro do card selecionado
-        let baseParaBusca = [];
-        if (filtroAtivo === '3') {
-            baseParaBusca = todasInstituicoes.filter(i => parseInt(i.idStatus) === 3);
-        } else if (filtroAtivo === 'nao') {
-            baseParaBusca = todasInstituicoes.filter(i => parseInt(i.idStatus) === 2 && i.usa_catraca === 'nao');
-        } else if (filtroAtivo === 'sim') {
-            baseParaBusca = todasInstituicoes.filter(i => parseInt(i.idStatus) === 2 && i.usa_catraca === 'sim');
-        } else {
-            baseParaBusca = todasInstituicoes;
-        }
-
-        // Depois filtra pelo texto digitado
-        listaFiltrada = baseParaBusca.filter(inst => {
-            const nome = (inst.nome_fantasia || "").toLowerCase();
-            const cidade = (inst.cidade || "").toLowerCase();
-            const responsavel = (inst.responsavel || "").toLowerCase();
-            return nome.includes(termo) || cidade.includes(termo) || responsavel.includes(termo);
-        });
-
-        paginaAtual = 1;
-        renderizarTabela();
+        renderizarTabela(); 
     }
 
     function renderizarTabela() {
@@ -160,76 +219,146 @@
         }
 
         itensExibidos.forEach(inst => {
+            const codigoFormatado = inst.idLegado ? inst.idLegado : inst.idInstituicao;
             corpo.innerHTML += `
                 <tr>
-                    <td>#${inst.idInstituicao}</td>
+                    <td>#${codigoFormatado}</td>
                     <td>${inst.cidade || '---'}</td>
                     <td><b>${inst.nome_fantasia}</b></td>
                     <td>${inst.responsavel || '---'}</td>
                     <td>${inst.telefone || '---'}</td>
                     <td style="color: #007bff;">${inst.email_usuario || '---'}</td>
-                    <td style="text-align: center;">
-                        <button class="btn-acao btn-edit" onclick="abrirEdicao(${inst.idInstituicao})" title="Editar">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn-acao btn-delete" onclick="deletarInstituicao(${inst.idInstituicao})" title="Excluir">
-                            <i class="fas fa-trash"></i>
-                        </button>
+                    <td>
+                        <div class="acoes-flex">
+                            <button class="btn-acao btn-edit" onclick="abrirEdicao(${inst.idInstituicao})" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn-acao btn-delete" onclick="deletarInstituicao(${inst.idInstituicao})" title="Excluir">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
                     </td>
                 </tr>`;
         });
-
         montarPaginador();
     }
 
-    function montarPaginador() {
-        const totalPaginas = Math.ceil(listaFiltrada.length / itensPorPagina);
-        const container = document.getElementById('paginacao');
-        container.innerHTML = "";
-
-        if (totalPaginas <= 1) return;
-
-        for (let i = 1; i <= totalPaginas; i++) {
-            const btn = document.createElement('button');
-            btn.innerText = i;
-            btn.className = `btn-pag ${i === paginaAtual ? 'active' : ''}`;
-            btn.onclick = () => {
-                paginaAtual = i;
-                renderizarTabela();
-                window.scrollTo(0,0);
-            };
-            container.appendChild(btn);
-        }
-    }
+    // --- AS FUNÇÕES QUE ESTAVAM EM FALTA E FAZEM OS BOTÕES FUNCIONAR ---
 
     function abrirEdicao(id) {
         localStorage.setItem('edit_id_instituicao', id);
-        // Verifique se o arquivo realmente se chama .html ou se você mudou para .php
         window.location.href = 'edita-instituicao.php'; 
     }
 
     async function deletarInstituicao(id) {
-        if (confirm("Deseja realmente remover esta instituição?")) {
-            const res = await chamarApi('/instituicao/deletar/' + id, 'DELETE');
-            if (!res.erro) inicializarPagina();
-        }
-    }
-
-    async function deletarInstituicao(id) {
         if (confirm("Deseja realmente desativar esta instituição?")) {
-            // Chamada usando a rota que criamos no index.php
-            const res = await chamarApi(`/instituicao/status/${id}`, 'PUT', { idStatus: 1 });
-            
-            if (!res.erro) {
-                alert("Instituição desativada!");
-                inicializarPagina(); 
-            } else {
-                alert(res.message);
+            try {
+                // 1. Avisa o banco de dados
+                const res = await chamarApi(`/api/instituicao/status/${id}`, 'PUT', { idStatus: 1 });
+                
+                if (!res.erro) {
+                    // 2. Remove da memória local imediatamente para ela sumir da tela
+                    todasInstituicoes = todasInstituicoes.filter(inst => inst.idInstituicao !== id);
+                    
+                    // 3. Re-aplica o filtro e renderiza a tabela
+                    aplicarFiltro(filtroAtivo);
+                    
+                    alert("Instituição removida com sucesso!");
+                } else {
+                    alert("Erro ao desativar: " + res.message);
+                }
+            } catch (error) {
+                console.error("Erro na exclusão:", error);
+                alert("Erro de conexão com o servidor.");
             }
         }
     }
 
-inicializarPagina();
+    // --- PAGINAÇÃO E ORDENAÇÃO ---
+
+   function montarPaginador() {
+    const totalPaginas = Math.ceil(listaFiltrada.length / itensPorPagina);
+    const container = document.getElementById('paginacao');
+    container.innerHTML = "";
+
+    if (totalPaginas <= 1) return;
+
+    let maxBotoes = 5;
+    let inicio = Math.max(1, paginaAtual - Math.floor(maxBotoes / 2));
+    let fim = Math.min(totalPaginas, inicio + maxBotoes - 1);
+
+    // Botão "PRIMEIRA" (Ícone duplo)
+    if (paginaAtual > 1) {
+        container.appendChild(criarBotaoPag(1, '<i class="fas fa-angle-double-left"></i>', false));
+        container.appendChild(criarBotaoPag(paginaAtual - 1, '<i class="fas fa-angle-left"></i>', false));
+    }
+
+    // Números
+    for (let i = inicio; i <= fim; i++) {
+        container.appendChild(criarBotaoPag(i, i, i === paginaAtual));
+    }
+
+    // Botão "PRÓXIMA"
+    if (paginaAtual < totalPaginas) {
+        container.appendChild(criarBotaoPag(paginaAtual + 1, '<i class="fas fa-angle-right"></i>', false));
+        container.appendChild(criarBotaoPag(totalPaginas, '<i class="fas fa-angle-double-right"></i>', false));
+    }
+}
+
+function criarBotaoPag(pagina, html, ativo) {
+    const btn = document.createElement('button');
+    btn.innerHTML = html; // Usamos innerHTML para renderizar o ícone
+    btn.className = `btn-pag ${ativo ? 'active' : ''}`;
+    btn.onclick = () => {
+        paginaAtual = pagina;
+        renderizarTabela();
+        window.scrollTo(0, 0);
+    };
+    return btn;
+}
+
+    let ordemAscendente = true;
+let ultimaColunaSorteada = '';
+
+function ordenarPor(coluna) {
+    // 1. Reseta todos os ícones para o estado inicial (sort neutro)
+    document.querySelectorAll('th i.fas').forEach(icon => {
+        icon.className = 'fas fa-sort';
+        icon.style.opacity = '0.3'; // Deixa clarinho quem não está ativo
+    });
+
+    if (ultimaColunaSorteada === coluna) {
+        ordemAscendente = !ordemAscendente;
+    } else {
+        ordemAscendente = true;
+        ultimaColunaSorteada = coluna;
+    }
+
+    // 2. Atualiza o ícone da coluna clicada
+    const iconeAtivo = document.getElementById(`sort-${coluna}`);
+    if (iconeAtivo) {
+        iconeAtivo.className = ordemAscendente ? 'fas fa-sort-up' : 'fas fa-sort-down';
+        iconeAtivo.style.opacity = '1'; // Destaca a coluna ativa
+    }
+
+    // ... (sua lógica de sort que já funciona) ...
+    listaFiltrada.sort((a, b) => {
+        let valA = a[coluna] ? a[coluna].toString().toLowerCase() : '';
+        let valB = b[coluna] ? b[coluna].toString().toLowerCase() : '';
+        if (coluna === 'idLegado') {
+            valA = parseInt(a[coluna]) || 0;
+            valB = parseInt(b[coluna]) || 0;
+        }
+        if (valA < valB) return ordemAscendente ? -1 : 1;
+        if (valA > valB) return ordemAscendente ? 1 : -1;
+        return 0;
+    });
+
+    paginaAtual = 1;
+    renderizarTabela();
+}
+
+    inicializarPagina();
 </script>
 
 <?php include_once '../includes/footerUnes-2.php'; ?>

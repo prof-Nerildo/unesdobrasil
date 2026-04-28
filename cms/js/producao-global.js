@@ -1,291 +1,230 @@
 /**
- * producao-global.js
- * Gerenciamento da esteira de produção UNES (Layout Tabela com Paginação de 10)
+ * producao-global.js - VERSÃO COMPLETA RECUPERADA
  */
-
-let todosDocumentosCache = []; // Guarda os dados para paginar sem ir ao banco toda hora
+let todosDocumentosCache = []; 
 let paginaAtual = 1;
 const itensPorPagina = 10;
+let ordemAscendente = true;
+let ultimaColunaSorteada = '';
 
+// 1. Formatação de Data e Hora
+function formatarDataHoraBR(dataString) {
+    if (!dataString || dataString === '0000-00-00 00:00:00') return '--/--/---- <br> --:--';
+    const data = new Date(dataString);
+    const dia = String(data.getDate()).padStart(2, '0');
+    const mes = String(data.getMonth() + 1).padStart(2, '0');
+    const ano = data.getFullYear();
+    const hora = String(data.getHours()).padStart(2, '0');
+    const minuto = String(data.getMinutes()).padStart(2, '0');
+    return `${dia}/${mes}/${ano} <br> <small style="color: #a0aec0; font-weight: normal;">${hora}:${minuto}</small>`;
+}
+
+// 2. Carga do Dashboard (Cards do Topo)
 async function carregarDadosDashboard() {
     try {
         const res = await chamarApi('/documento/resumo-global');
         if(!res.erro) {
             const d = res.dados;
-            document.getElementById('qtdCriado').innerText     = d.criados || 0;
-            document.getElementById('qtdSolicitado').innerText = d.solicitados || 0;
-            document.getElementById('qtdProducao').innerText   = d.producao || 0;
-            document.getElementById('qtdProduzido').innerText  = d.produzidos || 0;
-            document.getElementById('qtdEntregue').innerText   = d.entregues || 0;
+            if(document.getElementById('qtdCriado')) document.getElementById('qtdCriado').innerText = d.criados || 0;
+            if(document.getElementById('qtdSolicitado')) document.getElementById('qtdSolicitado').innerText = d.solicitados || 0;
+            if(document.getElementById('qtdProducao')) document.getElementById('qtdProducao').innerText = d.producao || 0;
+            if(document.getElementById('qtdProduzido')) document.getElementById('qtdProduzido').innerText = d.produzidos || 0;
+            if(document.getElementById('qtdEntregue')) document.getElementById('qtdEntregue').innerText = d.entregues || 0;
         }
     } catch (e) { console.error("Erro dashboard:", e); }
 }
 
+// 3. Busca os dados no Banco
 async function carregarProducao() {
     const status = document.getElementById('filtroStatus').value;
     const corpo = document.getElementById('tabelaProducaoCorpo');
-    corpo.innerHTML = '<tr><td colspan="10" class="text-center" style="padding: 50px; color: #a0aec0;">Carregando dados da esteira...</td></tr>';
+    corpo.innerHTML = '<tr><td colspan="11" class="text-center" style="padding: 50px; color: #a0aec0;"><i class="fas fa-spinner fa-spin"></i> Carregando esteira...</td></tr>';
 
     try {
         const res = await chamarApi(`/documento/producao-global/${status}`);
-        
         if(!res.erro && res.dados) {
             todosDocumentosCache = res.dados;
-            paginaAtual = 1; // Sempre volta para a primeira página ao trocar filtro
+            paginaAtual = 1;
             renderizarTabela();
         } else {
             todosDocumentosCache = [];
-            corpo.innerHTML = '<tr><td colspan="10" class="text-center" style="padding: 50px;">Nenhum registro encontrado.</td></tr>';
+            corpo.innerHTML = '<tr><td colspan="11" class="text-center" style="padding: 50px;">Nenhum registro encontrado.</td></tr>';
             renderizarPaginador(0);
         }
     } catch (e) { console.error("Erro carga produção:", e); }
 }
 
-function renderizarTabela() {
-    const corpo = document.getElementById('tabelaProducaoCorpo');
-    const busca = document.getElementById('buscaGlobal').value.toLowerCase();
-    
-    // 1. Filtra os documentos baseados na busca
-    const filtrados = todosDocumentosCache.filter(doc => {
-        const stringBusca = `${doc.InsEnsinoDocumento} ${doc.NomeDocumento} ${doc.nCPF} ${doc.idCard}`.toLowerCase();
-        return stringBusca.includes(busca);
+// 4. Ordenação das Colunas
+function ordenarEsteira(coluna) {
+    if (ultimaColunaSorteada === coluna) {
+        ordemAscendente = !ordemAscendente;
+    } else {
+        ordemAscendente = true;
+        ultimaColunaSorteada = coluna;
+    }
+
+    todosDocumentosCache.sort((a, b) => {
+        let valA = a[coluna] || '';
+        let valB = b[coluna] || '';
+
+        // 1. Lógica para Números (IDCARD)
+        if (coluna === 'idCard') {
+            return ordemAscendente ? (parseInt(valA) - parseInt(valB)) : (parseInt(valB) - parseInt(valA));
+        }
+
+        // 2. Lógica para Strings (Nomes, Instituição, etc)
+        valA = valA.toString().toLowerCase();
+        valB = valB.toString().toLowerCase();
+
+        if (valA < valB) return ordemAscendente ? -1 : 1;
+        if (valA > valB) return ordemAscendente ? 1 : -1;
+        return 0;
     });
 
-    // 2. Lógica de Paginação (Corte de 10 em 10)
-    const inicio = (paginaAtual - 1) * itensPorPagina;
-    const fim = inicio + itensPorPagina;
-    const listaPaginada = filtrados.slice(inicio, fim);
+    paginaAtual = 1; // Sempre volta para a primeira página ao ordenar
+    renderizarTabela();
+}
 
-    // 3. Monta o HTML
+// 5. Renderização da Tabela (O Coração do Script)
+function renderizarTabela() {
+    const corpo = document.getElementById('tabelaProducaoCorpo');
+    const busca = document.getElementById('buscaGlobal').value.toLowerCase().trim();
+    
+    // Atualiza ícones das setinhas
+    document.querySelectorAll('th i.fas').forEach(icon => {
+        const col = icon.id.replace('sort-', '');
+        if (col === ultimaColunaSorteada) {
+            icon.className = ordemAscendente ? 'fas fa-sort-up' : 'fas fa-sort-down';
+            icon.style.opacity = '1';
+        } else {
+            icon.className = 'fas fa-sort';
+            icon.style.opacity = '0.3';
+        }
+    });
+
+    // Filtro em todos os campos
+    const filtrados = todosDocumentosCache.filter(doc => {
+        return `${doc.idCard} ${doc.NomeDocumento} ${doc.InsEnsinoDocumento} ${doc.nCPF} ${doc.nRGDocumento}`.toLowerCase().includes(busca);
+    });
+
+    const inicio = (paginaAtual - 1) * itensPorPagina;
+    const listaPaginada = filtrados.slice(inicio, inicio + itensPorPagina);
+
     let html = "";
     if (listaPaginada.length > 0) {
+        const statusAtual = parseInt(document.getElementById('filtroStatus').value);
         listaPaginada.forEach(doc => {
-            // Formata as datas para o padrão BR
-            const dCriacao = doc.dataCriacao ? doc.dataCriacao.split(' ')[0].split('-').reverse().join('/') : '--/--/----';
+            const dSolicitacao = formatarDataHoraBR(doc.dataCriacao);
+            // Substitua a linha da dAlteracao por esta:
+            const dAlteracao = formatarDataHoraBR(doc.dataAlteracao || doc.updated_at || doc.data_atualizacao);
             const dNasc = doc.dataNascDocumento ? doc.dataNascDocumento.split('-').reverse().join('/') : '--/--/----';
+
+            let btnAcao = "";
+            if (statusAtual === 5) btnAcao = `<button onclick="alterarStatusIndividual('${doc.idCard}', 6, 'Mover para Produção?')" class="btn-mini-acao" style="background:#4e54c8;"><i class="fas fa-tools"></i></button>`;
+            else if (statusAtual === 6) btnAcao = `<button onclick="alterarStatusIndividual('${doc.idCard}', 7, 'Marcar como Produzido?')" class="btn-mini-acao" style="background:#27ae60;"><i class="fas fa-id-card"></i></button>`;
+            else if (statusAtual === 7) btnAcao = `<button onclick="alterarStatusIndividual('${doc.idCard}', 8, 'Confirmar Entrega?')" class="btn-mini-acao" style="background:#2c3e50;"><i class="fas fa-truck"></i></button>`;
 
             html += `
                 <tr class="linha-aluno">
-                    <td class="text-bold" style="color:#3182ce;">
-                        ${doc.idCard}
-                    </td>
+                    <td class="text-bold" style="color:#3182ce; white-space:nowrap;">${doc.idCard}</td>
                     <td class="text-bold">${doc.NomeDocumento.toUpperCase()}</td>
-                    <td style="font-size: 11px; color: #718096;">${doc.InsEnsinoDocumento}</td>
+                    <td style="font-size: 11px; color:#718096;">${doc.InsEnsinoDocumento}</td>
                     <td>${doc.serieDocumento}</td>
                     <td>${doc.nCPF}</td>
                     <td>${doc.nRGDocumento || '--'}</td> 
                     <td>${dNasc}</td> 
-                    <td class="text-center">
-                        <img src="../../${doc.fotoDocumento}" class="img-table-thumb">
-                    </td>
-                    <td class="text-center text-bold" style="color: #4a5568;">
-                        ${dCriacao}
-                    </td>
+                    <td class="text-center"><img src="../../${doc.fotoDocumento}" class="img-table-thumb"></td>
+                    <td class="text-center text-bold" style="font-size:12px;">${dSolicitacao}</td>
+                    <td class="text-center text-bold" style="font-size:12px;">${dAlteracao}</td>
+                    <td class="text-center">${btnAcao}</td>
                 </tr>`;
         });
     } else {
-        html = '<tr><td colspan="10" class="text-center" style="padding: 30px;">Nenhum registro encontrado para a busca.</td></tr>';
+        html = '<tr><td colspan="11" class="text-center" style="padding:30px;">Nenhum registro encontrado.</td></tr>';
     }
-
     corpo.innerHTML = html;
     renderizarPaginador(filtrados.length);
 }
 
+// 6. Paginação
 function renderizarPaginador(totalItens) {
-    let container = document.getElementById('paginador-v2');
-    
-    if (!container) {
-        const div = document.createElement('div');
-        div.id = 'paginador-v2';
-        div.style = "display:flex; justify-content:center; gap:5px; padding:15px; background:#fff; border-top:1px solid #eee;";
-        // Tentativa de anexar após a tabela se o card existir
-        const cardRef = document.querySelector('.card');
-        if(cardRef) cardRef.appendChild(div);
-        container = div;
-    }
-
+    const container = document.getElementById('paginador-v2');
+    if (!container) return;
     const totalPaginas = Math.ceil(totalItens / itensPorPagina);
-    let htmlPaginacao = "";
-
+    let html = "";
     if (totalPaginas > 1) {
         for (let i = 1; i <= totalPaginas; i++) {
-            const style = i === paginaAtual 
-                ? "background:#3182ce; color:#fff; border:1px solid #3182ce;" 
-                : "background:#fff; color:#333; border:1px solid #ddd;";
-            
-            htmlPaginacao += `<button onclick="mudarPagina(${i})" style="${style} padding:5px 12px; cursor:pointer; border-radius:4px; font-weight:bold;">${i}</button>`;
+            const active = i === paginaAtual ? "btn-pag-active" : "btn-pag-item";
+            html += `<button onclick="mudarPagina(${i})" class="${active}">${i}</button>`;
         }
     }
-    container.innerHTML = htmlPaginacao;
+    container.innerHTML = html;
 }
 
-function mudarPagina(num) {
-    paginaAtual = num;
-    renderizarTabela();
-    window.scrollTo({ top: 300, behavior: 'smooth' });
+function mudarPagina(num) { paginaAtual = num; renderizarTabela(); window.scrollTo({ top: 300, behavior: 'smooth' }); }
+function filtrarTabela() { paginaAtual = 1; renderizarTabela(); }
+
+// 7. Ações Individuais e em Lote
+async function alterarStatusIndividual(idCard, novoStatus, mensagem) {
+    if (!confirm(mensagem)) return;
+    try {
+        const res = await chamarApi(`/documento/status/${idCard}`, 'PUT', { novoStatus: novoStatus });
+        if (!res.erro) {
+            todosDocumentosCache = todosDocumentosCache.filter(doc => doc.idCard !== idCard);
+            renderizarTabela();
+            carregarDadosDashboard();
+        }
+    } catch (e) { console.error(e); }
 }
 
+async function moverParaProducaoLote() {
+    if (todosDocumentosCache.length === 0) return;
+    if (!confirm(`🚀 Mover TODOS para Produção?`)) return;
+    try {
+        await Promise.all(todosDocumentosCache.map(doc => chamarApi(`/documento/status/${doc.idCard}`, 'PUT', { novoStatus: 6 })));
+        carregarDadosDashboard(); carregarProducao();
+    } catch (e) { console.error(e); }
+}
+
+async function gerarLoteSelecionado() {
+    if (todosDocumentosCache.length === 0) return;
+    try {
+        const ids = todosDocumentosCache.map(doc => doc.idCard);
+        const res = await chamarApi('/documento/gerar-lote', 'POST', { ids });
+        if (!res.erro) {
+            window.location.href = `../../saas/Dependencies/download.php?file=${res.file}`;
+            carregarDadosDashboard(); carregarProducao();
+        }
+    } catch (e) { console.error(e); }
+}
+
+async function marcarComoEntregueLote() {
+    if (todosDocumentosCache.length === 0) return;
+    if (!confirm(`🚚 Entregar TODOS?`)) return;
+    try {
+        await Promise.all(todosDocumentosCache.map(doc => chamarApi(`/documento/status/${doc.idCard}`, 'PUT', { novoStatus: 8 })));
+        carregarDadosDashboard(); carregarProducao();
+    } catch (e) { console.error(e); }
+}
+
+// 8. Filtros de Status (Cards)
 function setFilter(statusId) {
     document.getElementById('filtroStatus').value = statusId;
-    
-    // UI Feedback nos cards
     document.querySelectorAll('.filter-card').forEach(c => c.classList.remove('active'));
     const cardAtivo = document.querySelector(`.filter-card[data-status="${statusId}"]`);
     if(cardAtivo) cardAtivo.classList.add('active');
 
-    // Referência dos Botões
     const btnMover = document.getElementById('btnMoverProducao');
     const btnZip = document.querySelector('button[onclick="gerarLoteSelecionado()"]');
     const btnEntregar = document.getElementById('btnFinalizarEntrega');
 
-    // Reseta visibilidade (Esconde todos)
-    if(btnMover) btnMover.style.display = 'none';
-    if(btnZip) btnZip.style.display = 'none';
-    if(btnEntregar) btnEntregar.style.display = 'none';
+    if(btnMover) btnMover.style.display = (statusId == 5) ? 'block' : 'none';
+    if(btnZip) btnZip.style.display = (statusId == 6) ? 'block' : 'none';
+    if(btnEntregar) btnEntregar.style.display = (statusId == 7) ? 'block' : 'none';
 
-    // Lógica Contextual
-    if(statusId == 5) { 
-        // Aba SOLICITADOS
-        if(btnMover) btnMover.style.display = 'block';
-    } 
-    else if(statusId == 6) { 
-        // Aba EM PRODUÇÃO
-        if(btnZip) btnZip.style.display = 'block';
-    } 
-    else if(statusId == 7) { 
-        // Aba PRODUZIDOS
-        if(btnEntregar) btnEntregar.style.display = 'block';
-    }
-
-    const labels = {9: 'CRIADOS', 5: 'SOLICITADOS', 6: 'EM PRODUÇÃO', 7: 'PRODUZIDOS', 8: 'ENTREGUES'};
+    const labels = {9:'CRIADOS', 5:'SOLICITADOS', 6:'EM PRODUÇÃO', 7:'PRODUZIDOS', 8:'ENTREGUES'};
     document.getElementById('tituloStatus').innerHTML = `<i class="fas fa-list"></i> EXIBINDO: ${labels[statusId]}`;
-    
     carregarProducao();
 }
 
-// NOVA FUNÇÃO: Move de Produzido (7) para Entregue (8)
-async function marcarComoEntregueLote() {
-    const listaParaEntregar = todosDocumentosCache;
-
-    if (listaParaEntregar.length === 0) {
-        alert("⚠️ Não há documentos produzidos para marcar como entregue.");
-        return;
-    }
-
-    const confirmacao = confirm(`🚚 Deseja marcar TODOS os ${listaParaEntregar.length} documentos como ENTREGUES?`);
-    if (!confirmacao) return;
-
-    const btn = document.getElementById('btnFinalizarEntrega');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> PROCESSANDO...';
-
-    try {
-        // Mapeia os IDs e atualiza para Status 8
-        const promessas = listaParaEntregar.map(doc => 
-            chamarApi(`/documento/status/${doc.idCard}`, 'PUT', { novoStatus: 8 })
-        );
-
-        await Promise.all(promessas);
-        
-        alert("✅ Sucesso! Os documentos foram marcados como entregues e arquivados.");
-        
-        carregarDadosDashboard();
-        carregarProducao();
-
-    } catch (e) {
-        console.error(e);
-        alert("🚫 Erro ao processar a entrega do lote.");
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-check-double"></i> MARCAR COMO ENTREGUE';
-    }
-}
-
-
-function filtrarTabela() {
-    paginaAtual = 1;
-    renderizarTabela();
-}
-
-async function moverParaProducaoLote() {
-    const listaParaMover = todosDocumentosCache;
-
-    if (listaParaMover.length === 0) {
-        alert("⚠️ Não há documentos nesta lista para mover.");
-        return;
-    }
-
-    const confirmacao = confirm(`🚀 ATENÇÃO: Você está prestes a mover TODOS os ${listaParaMover.length} documentos desta lista para "Em Produção".\n\nConfirma esta operação?`);
-    
-    if (!confirmacao) return;
-
-    const btn = document.getElementById('btnMoverProducao');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> MOVENDO TUDO...';
-
-    try {
-        const promessas = listaParaMover.map(doc => 
-            chamarApi(`/documento/status/${doc.idCard}`, 'PUT', { novoStatus: 6 })
-        );
-
-        await Promise.all(promessas);
-        alert(`✅ Sucesso! ${listaParaMover.length} documentos foram movidos para a esteira de Produção.`);
-        
-        carregarDadosDashboard();
-        carregarProducao();
-    } catch (e) {
-        console.error(e);
-        alert("🚫 Erro ao tentar mover o lote completo.");
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-tools"></i> MOVER P/ PRODUÇÃO';
-    }
-}
-
-async function gerarLoteSelecionado() {
-    // 1. Pega TODOS os documentos da lista atual (sem precisar marcar nada)
-    const listaParaLote = todosDocumentosCache;
-
-    if (listaParaLote.length === 0) {
-        alert("⚠️ Não há documentos nesta lista para gerar lote.");
-        return;
-    }
-
-    const confirmacao = confirm(`📦 Deseja gerar o lote ZIP para os ${listaParaLote.length} documentos em produção?`);
-    if (!confirmacao) return;
-
-    const btnZip = document.querySelector('button[onclick="gerarLoteSelecionado()"]');
-    btnZip.disabled = true;
-    btnZip.innerHTML = '<i class="fas fa-spinner fa-spin"></i> GERANDO LOTE...';
-
-    try {
-        // Mapeia todos os IDs do lote carregado
-        const idsParaProcessar = listaParaLote.map(doc => doc.idCard);
-
-        const res = await chamarApi('/documento/gerar-lote', 'POST', { ids: idsParaProcessar });
-
-        if (!res.erro) {
-           // Substitua a linha do window.location por esta:
-            window.location.href = `../../saas/Dependencies/download.php?file=${res.file}`;
-            
-            alert("✅ Lote gerado com sucesso! Os documentos foram movidos para 'Produzidos'.");
-            carregarDadosDashboard();
-            carregarProducao();
-        } else {
-            alert("🚫 Erro: " + res.message);
-        }
-    } catch (e) {
-        alert("🚫 Erro ao processar o lote.");
-    } finally {
-        btnZip.disabled = false;
-        btnZip.innerHTML = '<i class="fas fa-file-archive"></i> GERAR LOTE (ZIP)';
-    }
-}
-
-
-
-// Inicialização
-document.addEventListener('DOMContentLoaded', () => {
-    carregarDadosDashboard();
-    setFilter(5); 
-});
+document.addEventListener('DOMContentLoaded', () => { carregarDadosDashboard(); setFilter(5); });

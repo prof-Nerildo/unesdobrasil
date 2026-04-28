@@ -50,6 +50,9 @@ class DocumentoRepository {
      * Cria o documento estudantil com lógica de ID sequencial, fuso horário BR
      * e suporte ao ID Legado (Coringa para sistema 1.0)
      */
+    /**
+     * Cria o documento estudantil com lógica de ID sequencial corrigida (12 dígitos)
+     */
     public function create(\Models\RegisterRequestModelDocumento $request) {
         try {
             // 0. AJUSTE DE FUSO HORÁRIO
@@ -60,7 +63,7 @@ class DocumentoRepository {
                 $this->db->beginTransaction();
             }
 
-            // --- NOVIDADE: BUSCA A INSTITUIÇÃO PARA VERIFICAR ID LEGADO ---
+            // --- BUSCA A INSTITUIÇÃO PARA VERIFICAR ID LEGADO ---
             $sqlInst = "SELECT idInstituicao, idLegado FROM instituicao WHERE idInstituicao = :id";
             $stmtInst = $this->db->prepare($sqlInst);
             $stmtInst->execute([':id' => $request->idInsEnsino]);
@@ -70,9 +73,8 @@ class DocumentoRepository {
                 throw new Exception("Instituição não encontrada.");
             }
 
-            // LÓGICA DO CORINGA: Se idLegado existe, usa ele. Senão, usa o idInstituicao.
+            // LÓGICA DO CORINGA: Usa o idLegado se existir, senão usa o idInstituicao
             $codigoIdentificador = !empty($inst['idLegado']) ? $inst['idLegado'] : $inst['idInstituicao'];
-            // --------------------------------------------------------------
 
             // 1. LÓGICA DO IDNAC (Sequencial por instituição/ano)
             $sqlMax = "SELECT MAX(CAST(idNac AS UNSIGNED)) as ultimo 
@@ -86,13 +88,23 @@ class DocumentoRepository {
             ]);
             $res = $stmtMax->fetch(PDO::FETCH_ASSOC);
 
+            // GERA O PRÓXIMO NÚMERO (Ex: 1)
             $proximoSequencial = ($res['ultimo'] ?? 0) + 1;
-            $idNac = str_pad($proximoSequencial, 4, "0", STR_PAD_LEFT);
             
-            // DNA UNES: Ano(4) + Inst(4) + Nac(4)
-            // Aqui usamos o $codigoIdentificador (que pode ser o 173 ou o 11)
-            $idInstFormat = str_pad($codigoIdentificador, 4, "0", STR_PAD_LEFT);
+            // --- CORREÇÃO MATADORA ---
+            // 1. Convertemos para (int) para remover qualquer zero à esquerda que venha do banco
+            $codigoLimpo = (int)$codigoIdentificador; 
+
+            // 2. Agora sim, formatamos para ter EXATAMENTE 4 dígitos
+            $idInstFormat = str_pad($codigoLimpo, 4, "0", STR_PAD_LEFT);
+
+            // 3. O sequencial também travado em 4 dígitos
+            $idNac = str_pad($proximoSequencial, 4, "0", STR_PAD_LEFT);
+
+            // Resultado final: 2026 + 0005 + 0001 = 12 dígitos
             $idCard = $anoAtualBr . $idInstFormat . $idNac;
+            // -------------------------
+            // ---------------------------
 
             // 2. PROCESSAMENTO DA FOTO
             $nomeArquivo = $idCard . ".jpg";
@@ -125,13 +137,13 @@ class DocumentoRepository {
             
             $stmt = $this->db->prepare($sql);
             $stmt->execute([
-                ':idInst'  => $request->idInsEnsino, // Aqui SEMPRE salvamos o ID 11 (FK do banco)
+                ':idInst'  => $request->idInsEnsino,
                 ':idStatus'=> $request->idStatus,
                 ':idUser'  => $request->idUsuarioAlteracao,
                 ':tipo'    => $request->tipoDocumento,
                 ':ano'     => $anoAtualBr,
                 ':idNac'   => $idNac,
-                ':idCard'  => $idCard, // Aqui vai o ID com 173 (Interface/Documento)
+                ':idCard'  => $idCard,
                 ':nome'    => $request->nomeAluno,
                 ':escola'  => $request->nomeEscola,
                 ':curso'   => $request->serieCurso,
@@ -148,11 +160,6 @@ class DocumentoRepository {
             if ($this->db->inTransaction()) {
                 $this->db->rollBack();
             }
-
-            if ($e->getCode() == 23000 || str_contains($e->getMessage(), '1062 Duplicate entry')) {
-                throw new Exception("Este CPF já possui um documento registrado para o ano letivo atual.");
-            }
-
             throw new Exception("Erro no Repository: " . $e->getMessage());
         }
     }
@@ -180,7 +187,10 @@ class DocumentoRepository {
 
     public function update($idCard, $dados) {
         try {
-            // 1. Lógica para atualizar a foto apenas se uma nova for enviada
+            // FORÇA FUSO BRASIL
+            date_default_timezone_set('America/Sao_Paulo');
+            $agora = date('Y-m-d H:i:s');
+
             $sqlFoto = "";
             $params = [
                 ':nome'   => $dados['nome'],
@@ -189,11 +199,11 @@ class DocumentoRepository {
                 ':nasc'   => $dados['nascimento'],
                 ':cpf'    => $dados['cpf'],
                 ':rg'     => $dados['rg'],
+                ':agora'  => $agora, // Passamos a hora do BR
                 ':idCard' => $idCard
             ];
 
             if (!empty($dados['foto'])) {
-                // Processa e salva a nova imagem física
                 $diretorioFotos = __DIR__ . '/../../img-validacao/fotos/';
                 $nomeArquivo = $idCard . ".jpg";
                 $fotoData = explode(',', $dados['foto']);
@@ -204,19 +214,20 @@ class DocumentoRepository {
                 $params[':foto'] = "img-validacao/fotos/" . $nomeArquivo;
             }
 
+            // Adicionado dataAtualizacao = :agora para rastreio correto
             $sql = "UPDATE documento_estudantil SET 
                         NomeDocumento = :nome,
                         InsEnsinoDocumento = :escola,
                         serieDocumento = :curso,
                         dataNascDocumento = :nasc,
                         nCPF = :cpf,
-                        nRGDocumento = :rg
+                        nRGDocumento = :rg,
+                        dataAtualizacao = :agora
                         $sqlFoto
                     WHERE idCard = :idCard";
 
             $stmt = $this->db->prepare($sql);
             return $stmt->execute($params);
-
         } catch (Exception $e) {
             throw new Exception("Erro ao atualizar no Repository: " . $e->getMessage());
         }
@@ -291,17 +302,24 @@ class DocumentoRepository {
 
     public function atualizarStatusViradaDeDia() {
         try {
-            // Altera de "Criado" (9) para "Solicitado" (5) 
-            // se a data de criação for menor que o dia atual (CURDATE)
+            // 1. Forçamos o PHP a entender que estamos no Brasil
+            date_default_timezone_set('America/Sao_Paulo');
+            
+            // 2. Pegamos a data atual do Brasil via PHP para passar ao MySQL
+            $hojeBrasil = date('Y-m-d');
+
+            // 3. Na query, comparamos a data de criação com a data que o PHP gerou.
+            // Isso ignora o relógio do servidor dos EUA.
             $sql = "UPDATE documento_estudantil 
                     SET idStatus = 5 
                     WHERE idStatus = 9 
-                    AND DATE(dataCriacao) < CURDATE()";
+                    AND DATE(dataCriacao) < :hoje";
             
             $stmt = $this->db->prepare($sql);
-            return $stmt->execute();
+            // Enviamos a data correta do Brasil (Ex: 2026-04-23)
+            return $stmt->execute([':hoje' => $hojeBrasil]);
+
         } catch (Exception $e) {
-            // Não travamos o sistema por isso, apenas logamos se necessário
             return false;
         }
     }
