@@ -13,12 +13,10 @@ class UsuarioRepository {
 
     public function create(\Models\RegisterRequestModelUsuario $request) {
         try {
-            date_default_timezone_set('America/Sao_Paulo');
-            $agora = date('Y-m-d H:i:s');
             if (!$this->db->inTransaction()) { $this->db->beginTransaction(); }
 
-            $sql = "INSERT INTO usuario (idAcl, idStatus, idPerfil, idInstituicao, primeiro_nome, sobrenome, cargo, email, username, senha, dataCriacao) 
-                    VALUES (:idAcl, :idStatus, :idPerfil, :idInst, :primeiro_nome, :sobrenome, :cargo, :email, :username, :senha, :data)";
+            $sql = "INSERT INTO usuario (idAcl, idStatus, idPerfil, idInstituicao, primeiro_nome, sobrenome, cargo, email, username, senha) 
+                    VALUES (:idAcl, :idStatus, :idPerfil, :idInst, :primeiro_nome, :sobrenome, :cargo, :email, :username, :senha)";
             
             $stmt = $this->db->prepare($sql);
             $stmt->execute([
@@ -31,8 +29,7 @@ class UsuarioRepository {
                 ':cargo'         => $request->cargo,
                 ':email'         => $request->email,
                 ':username'      => $request->username,
-                ':senha'         => $request->senha,
-                ':data'          => $agora
+                ':senha'         => $request->senha
             ]);
 
             $idUsuario = $this->db->lastInsertId();
@@ -51,7 +48,6 @@ class UsuarioRepository {
     }
 
     public function updateLastLogin($idUsuario) {
-        date_default_timezone_set('America/Sao_Paulo');
         $agora = date('Y-m-d H:i:s');
         $sql = "UPDATE usuario SET last_login = :agora WHERE idUsuario = :id";
         $stmt = $this->db->prepare($sql);

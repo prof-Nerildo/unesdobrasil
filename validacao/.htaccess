@@ -1,0 +1,5 @@
+RewriteEngine On
+# Se o arquivo ou diretório não existir, manda para o index.php passando o ID
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^([a-zA-Z0-9]+)$ index.php?id=$1 [QSA,L]

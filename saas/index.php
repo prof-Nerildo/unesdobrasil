@@ -1,7 +1,17 @@
 <?php
-// 1. Configurações de Erro
-error_reporting(E_ALL); 
-ini_set('display_errors', 1); 
+// 1. Configurações de Erro (condicional ao ambiente)
+$_configTemp = json_decode(file_get_contents(__DIR__ . '/appsettings.json'), true);
+$_ambiente = $_configTemp['Ambiente'] ?? 'producao';
+if ($_ambiente === 'dev') {
+    error_reporting(E_ALL);
+    ini_set('display_errors', 1);
+} else {
+    error_reporting(0);
+    ini_set('display_errors', 0);
+}
+
+// Timezone centralizado (Brasil)
+date_default_timezone_set('America/Sao_Paulo');
 
 // 2. Headers de API
 header("Access-Control-Allow-Origin: *");
@@ -77,19 +87,19 @@ try {
             $instController->listarTodas($validarToken()),
 
         $method === 'PUT' && str_contains($uri, 'api/instituicao/status/') => 
-            $instController->atualizarStatus(basename($uri), $dadosJson),
+            $instController->atualizarStatus(basename($uri), $dadosJson, $validarToken()),
 
         $method === 'GET' && (str_contains($uri, 'api/instituicao/buscar/') || str_contains($uri, 'api/instituicao/detalhes/')) => 
             $instController->buscarPorId(basename($uri)),
 
         $method === 'PUT' && (str_contains($uri, 'api/instituicao/atualizar/') || str_contains($uri, 'api/instituicao/alterar/')) => 
-            $instController->atualizarCompleto(basename($uri), $dadosJson),
+            $instController->atualizarCompleto(basename($uri), $dadosJson, $validarToken()),
 
         $method === 'PUT' && str_contains($uri, 'api/instituicao/perfil-atualizar/') => 
-            $instController->atualizarPerfilInstituicao(basename($uri), $dadosJson),
+            $instController->atualizarPerfilInstituicao(basename($uri), $dadosJson, $validarToken()),
 
         $method === 'GET' && str_contains($uri, 'api/instituicao/resumo-unes') => 
-            $instController->resumoDashboardUnes(),
+            $instController->resumoDashboardUnes($validarToken()),
 
         // DOCUMENTO ESTUDANTIL
         $method === 'POST' && str_contains($uri, 'api/documento/registrar') => 
@@ -99,13 +109,13 @@ try {
             $docController->listarPorStatus(basename($uri), 9),
 
         $method === 'POST' && str_contains($uri, 'api/documento/suspender/') => 
-            $docController->suspenderDocumento(basename($uri)),
+            $docController->suspenderDocumento(basename($uri), $validarToken()),
 
         $method === 'GET' && str_contains($uri, 'api/documento/detalhes/') => 
-            $docController->buscarDetalhes(basename($uri)),
+            $docController->buscarDetalhes(basename($uri), $validarToken()),
         
         $method === 'POST' && str_contains($uri, 'api/documento/atualizar/') => 
-            $docController->atualizarDocumento(basename($uri), $dadosJson),
+            $docController->atualizarDocumento(basename($uri), $dadosJson, $validarToken()),
 
         $method === 'GET' && str_contains($uri, 'api/documento/resumo-dashboard/') => 
             $docController->resumoDashboard(basename($uri)),
@@ -117,20 +127,25 @@ try {
             return $docController->listarPorStatusGenerico($idInst, $status);
         })(),
 
-        $method === 'PUT' && str_contains($uri, 'api/documento/status/') => (function() use ($uri, $dadosJson, $docController) {
+        $method === 'PUT' && str_contains($uri, 'api/documento/status/') => (function() use ($uri, $dadosJson, $docController, $validarToken) {
+            $validarToken();
             $idCard = basename(rtrim($uri, '/'));
             return $docController->atualizarStatusDoc($idCard, $dadosJson);
         })(),
 
         $method === 'GET' && str_contains($uri, 'api/documento/resumo-global') => 
-            $docController->resumoGlobal(),
+            $docController->resumoGlobal($validarToken()),
 
         $method === 'GET' && str_contains($uri, 'api/documento/producao-global/') => 
-            $docController->listarProducaoGlobal(basename(rtrim($uri, '/'))),
+            $docController->listarProducaoGlobal(basename(rtrim($uri, '/')), $validarToken()),
 
         // ROTA PARA GERAR LOTE (POST)
         $method === 'POST' && str_contains($uri, 'api/documento/gerar-lote') => 
-            $docController->gerarLoteZip($dadosJson),
+            $docController->gerarLoteZip($dadosJson, $validarToken()),
+
+        // NOVA ROTA PÚBLICA PARA VALIDAÇÃO (QR CODE / FISCAL)
+        $method === 'GET' && str_contains($uri, 'api/documento/validar-publico/') => 
+            $docController->buscarDetalhesPublicos(basename($uri)),
         
         default => throw new Exception("Endpoint não encontrado: " . $uri, 404)
     };

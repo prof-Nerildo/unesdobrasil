@@ -44,7 +44,7 @@ class InstituicaoEnsinoController {
         }
     }
 
-    public function atualizarStatus($id, $dadosJson) {
+    public function atualizarStatus($id, $dadosJson, $userLogado = null) {
         try {
             $idStatus = $dadosJson['idStatus'] ?? null;
             if ($idStatus === null) {
@@ -63,7 +63,7 @@ class InstituicaoEnsinoController {
         }
     }
 
-    public function atualizarCompleto($id, $dadosJson) {
+    public function atualizarCompleto($id, $dadosJson, $userLogado = null) {
         try {
             $sucesso = $this->repoInst->updateCompleto($id, $dadosJson);
             return json_encode(["erro" => false, "message" => "Instituição validada e ativada com sucesso!"]);
@@ -78,7 +78,7 @@ class InstituicaoEnsinoController {
         return json_encode(["erro" => false, "dados" => $dados]);
     }
 
-    public function atualizarPerfilInstituicao($id, $dadosJson) {
+    public function atualizarPerfilInstituicao($id, $dadosJson, $userLogado = null) {
         try {
             // Chamaremos um método novo no Repository que protege os campos sensíveis
             $sucesso = $this->repoInst->updatePerfilPelaInstituicao($id, $dadosJson);
@@ -92,7 +92,7 @@ class InstituicaoEnsinoController {
         }
     }
 
-    public function resumoDashboardUnes() {
+    public function resumoDashboardUnes($userLogado = null) {
         try {
             $dados = $this->repoInst->resumoDashboardUnes(); 
             if (!$dados) {

@@ -93,6 +93,8 @@
                     <tbody id="tabelaProducaoCorpo"></tbody>
                 </table>
             </div>
+
+            <div id="paginador-v2"></div>
         </div>
     </section>
 </main>
@@ -141,33 +143,32 @@
     align-items: center;
     gap: 8px;
     padding: 20px;
+    margin: 10px 0;
 }
 
-.btn-pag-item, .btn-pag-nav {
+#paginador-v2 .btn-pag {
+    min-width: 40px;
+    height: 40px;
+    padding: 0 10px;
+    border: 1px solid #e0e0e0;
     background: #fff;
-    color: #4a5568;
-    border: 1px solid #e2e8f0;
-    padding: 6px 12px;
-    cursor: pointer;
+    color: #555;
     border-radius: 6px;
     font-weight: 600;
-    font-size: 13px;
+    cursor: pointer;
     transition: all 0.2s;
 }
 
-.btn-pag-active {
-    background: #3182ce;
-    color: #fff;
-    border: 1px solid #3182ce;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-weight: 700;
-    box-shadow: 0 4px 6px rgba(49, 130, 206, 0.2);
+#paginador-v2 .btn-pag:hover {
+    background: #f0f0f0;
+    border-color: #bbb;
 }
 
-.btn-pag-item:hover, .btn-pag-nav:hover {
-    background: #f7fafc;
-    border-color: #cbd5e0;
+#paginador-v2 .btn-pag.active {
+    background: #2c3e50;
+    color: #fff;
+    border-color: #2c3e50;
+    box-shadow: 0 4px 10px rgba(44, 62, 80, 0.2);
 }
 table th i {
     margin-left: 5px;

@@ -1,9 +1,8 @@
-// 1. Proteção contra redeclaração
+// A variável API_URL é definida pelo env.php (carregado antes deste script)
+// Fallback para localhost caso env.php não tenha sido incluído
 if (typeof API_URL === 'undefined') {
-    //  Local
     var API_URL = "http://localhost/unesdobrasil/saas/index.php/api";
-    // web teste
-    //var API_URL = "https://www.webdna.com.br/unes/saas/index.php/api";
+    console.warn("[UNES] env.php não carregado — usando fallback localhost");
 }
 
 async function chamarApi(endpoint, metodo = 'GET', dados = null) {

@@ -41,14 +41,14 @@
     async function carregarDashboardUnes() {
         try {
             // A. Carrega o Nome do Nerildo
-            const resPerfil = await chamarApi('/api/account/me');
+            const resPerfil = await chamarApi('/account/me');
             if(!resPerfil.erro) {
                 document.getElementById('nomeUsuario').innerText = resPerfil.dados.nome.split(' ')[0];
             }
 
             // B. Carrega Resumo das Instituições (Linha 1)
             // Rota: devolve { validar: X, sem_catraca: Y, com_catraca: Z }
-            const resInst = await chamarApi('/api/instituicao/resumo-unes');
+            const resInst = await chamarApi('/instituicao/resumo-unes');
             if(!resInst.erro) {
                 const i = resInst.dados;
                 if(document.getElementById('qtdValidar'))    document.getElementById('qtdValidar').innerText = i.validar || 0;
@@ -59,7 +59,7 @@
             // C. Carrega Resumo Global de Produção (Linha 2)
             // Rota: devolve { criados: X, solicitados: Y, producao: Z, produzidos: W, entregues: K }
             // C. Carrega Resumo Global de Produção (Linha 2)
-            const resDocs = await chamarApi('/api/documento/resumo-global');
+            const resDocs = await chamarApi('/documento/resumo-global');
             if(!resDocs.erro) {
                 const d = resDocs.dados;
                 // Mapeamento que aceita as variações de nomes do banco

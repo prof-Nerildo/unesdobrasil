@@ -146,19 +146,47 @@ function renderizarTabela() {
     renderizarPaginador(filtrados.length);
 }
 
-// 6. Paginação
+// 6. Paginação (padrão instituicoes.php)
 function renderizarPaginador(totalItens) {
     const container = document.getElementById('paginador-v2');
     if (!container) return;
+    container.innerHTML = "";
+
     const totalPaginas = Math.ceil(totalItens / itensPorPagina);
-    let html = "";
-    if (totalPaginas > 1) {
-        for (let i = 1; i <= totalPaginas; i++) {
-            const active = i === paginaAtual ? "btn-pag-active" : "btn-pag-item";
-            html += `<button onclick="mudarPagina(${i})" class="${active}">${i}</button>`;
-        }
+    if (totalPaginas <= 1) return;
+
+    let maxBotoes = 5;
+    let inicio = Math.max(1, paginaAtual - Math.floor(maxBotoes / 2));
+    let fim = Math.min(totalPaginas, inicio + maxBotoes - 1);
+
+    // Botões "PRIMEIRA" e "ANTERIOR"
+    if (paginaAtual > 1) {
+        container.appendChild(criarBotaoPag(1, '<i class="fas fa-angle-double-left"></i>', false));
+        container.appendChild(criarBotaoPag(paginaAtual - 1, '<i class="fas fa-angle-left"></i>', false));
     }
-    container.innerHTML = html;
+
+    // Números
+    for (let i = inicio; i <= fim; i++) {
+        container.appendChild(criarBotaoPag(i, i, i === paginaAtual));
+    }
+
+    // Botões "PRÓXIMA" e "ÚLTIMA"
+    if (paginaAtual < totalPaginas) {
+        container.appendChild(criarBotaoPag(paginaAtual + 1, '<i class="fas fa-angle-right"></i>', false));
+        container.appendChild(criarBotaoPag(totalPaginas, '<i class="fas fa-angle-double-right"></i>', false));
+    }
+}
+
+function criarBotaoPag(pagina, html, ativo) {
+    const btn = document.createElement('button');
+    btn.innerHTML = html;
+    btn.className = `btn-pag ${ativo ? 'active' : ''}`;
+    btn.onclick = () => {
+        paginaAtual = pagina;
+        renderizarTabela();
+        window.scrollTo({ top: 300, behavior: 'smooth' });
+    };
+    return btn;
 }
 
 function mudarPagina(num) { paginaAtual = num; renderizarTabela(); window.scrollTo({ top: 300, behavior: 'smooth' }); }

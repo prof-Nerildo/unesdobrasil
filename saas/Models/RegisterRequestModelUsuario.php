@@ -26,7 +26,7 @@ class RegisterRequestModelUsuario {
         $this->cargo         = $dados['cargo'] ?? '';
         $this->email         = $dados['email'] ?? '';
         $this->username      = $dados['username'] ?? '';
-        $this->senha         = isset($dados['senha']) ? password_hash($dados['senha'], PASSWORD_BCRYPT) : null;
+        $this->senha         = $dados['senha'] ?? null;
         $this->celular       = $dados['celular'] ?? ''; 
     }
 

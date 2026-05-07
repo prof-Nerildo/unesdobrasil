@@ -84,6 +84,7 @@ include '../includes/sidebarUnes.php';
     </div>
 </div>
 
+<script src="../js/env.php"></script>
 <script src="../js/api.js"></script>
 <script>
     async function inicializarDashboard() {

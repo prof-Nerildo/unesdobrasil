@@ -13,7 +13,6 @@ class InstituicaoEnsinoRepository {
 
     public function createSimples(\Models\RegisterRequestModelInstituicaoEnsino $model) {
         try {
-            date_default_timezone_set('America/Sao_Paulo');
             $agora = date('Y-m-d H:i:s');
 
             if (!$this->db->inTransaction()) {
@@ -134,7 +133,6 @@ class InstituicaoEnsinoRepository {
 
     public function updatePerfilPelaInstituicao($id, $dados) {
         try {
-            date_default_timezone_set('America/Sao_Paulo');
             $agora = date('Y-m-d H:i:s');
             if (!$this->db->inTransaction()) { $this->db->beginTransaction(); }
 
@@ -158,7 +156,6 @@ class InstituicaoEnsinoRepository {
 
     public function updateCompleto($id, $dados) {
         try {
-            date_default_timezone_set('America/Sao_Paulo');
             $agora = date('Y-m-d H:i:s');
             if (!$this->db->inTransaction()) { $this->db->beginTransaction(); }
 

@@ -8,6 +8,7 @@ class RegisterRequestModelInstituicaoEnsino {
     public $cep;
     public $logradouro;
     public $numero;
+    public $complemento;
     public $bairro;
     public $cidade;
     public $uf;
@@ -22,6 +23,7 @@ class RegisterRequestModelInstituicaoEnsino {
         $this->cep           = $dados['cep'] ?? '';
         $this->logradouro    = $dados['logradouro'] ?? ''; 
         $this->numero        = $dados['numero'] ?? '';
+        $this->complemento   = $dados['complemento'] ?? '';
         $this->bairro        = $dados['bairro'] ?? '';
         $this->cidade        = $dados['cidade'] ?? '';
         $this->uf            = $dados['uf'] ?? '';

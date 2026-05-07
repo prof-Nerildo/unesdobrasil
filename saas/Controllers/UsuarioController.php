@@ -23,9 +23,12 @@ class UsuarioController {
         $jsonPath = __DIR__ . '/../appsettings.json';
         if (file_exists($jsonPath)) {
             $config = json_decode(file_get_contents($jsonPath), true);
-            $this->apiKey = $config['AppSettings']['JwtSecret'] ?? "Leite_Com_MangaRosa_Mata_todos_kkk@2026";
+            $this->apiKey = $config['AppSettings']['JwtSecret'] ?? '';
         } else {
-            $this->apiKey = "Leite_Com_MangaRosa_Mata_todos_kkk@2026";
+            throw new \Exception("Arquivo appsettings.json não encontrado.");
+        }
+        if (empty($this->apiKey)) {
+            throw new \Exception("JwtSecret não configurado no appsettings.json.");
         }
     }
 
@@ -181,8 +184,9 @@ class UsuarioController {
 
             $email = $userLogado['email'];
 
-            // Criptografia simples (a mesma que estamos usando no Login agora)
-            $novaSenhaHash = password_hash($novaSenha, PASSWORD_BCRYPT);
+            // Usa o padrão complexo (SHA256 + apiKey) — o mesmo do register/login
+            $stringComplexa = $this->montarStringCriptografia($novaSenha, $email);
+            $novaSenhaHash = password_hash($stringComplexa, PASSWORD_BCRYPT);
             
             $sucesso = $this->repositoryUsuario->updateSenha($email, $novaSenhaHash);
 

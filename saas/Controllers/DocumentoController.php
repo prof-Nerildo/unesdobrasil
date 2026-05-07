@@ -40,21 +40,21 @@ class DocumentoController {
         } catch (Exception $e) { return json_encode(["erro" => true, "message" => $e->getMessage()]); }
     }
 
-    public function suspenderDocumento($idCard) {
+    public function suspenderDocumento($idCard, $userLogado = null) {
         try {
             $sucesso = $this->repositoryDocumento->suspender($idCard);
             return json_encode(["erro" => !$sucesso, "message" => $sucesso ? "Suspenso!" : "Erro ao suspender."]);
         } catch (Exception $e) { return json_encode(["erro" => true, "message" => $e->getMessage()]); }
     }
 
-    public function buscarDetalhes($idCard) {
+    public function buscarDetalhes($idCard, $userLogado = null) {
         try {
             $dados = $this->repositoryDocumento->buscarPorIdCard($idCard);
             return json_encode(["erro" => false, "dados" => $dados]);
         } catch (Exception $e) { return json_encode(["erro" => true, "message" => $e->getMessage()]); }
     }
 
-    public function atualizarDocumento($idCard, $dadosJson) {
+    public function atualizarDocumento($idCard, $dadosJson, $userLogado = null) {
         try {
             $sucesso = $this->repositoryDocumento->update($idCard, $dadosJson);
             return json_encode(["erro" => !$sucesso, "message" => "Atualizado!"]);
@@ -82,7 +82,7 @@ class DocumentoController {
         } catch (Exception $e) { return json_encode(["erro" => true, "message" => $e->getMessage()]); }
     }
 
-    public function resumoGlobal() {
+    public function resumoGlobal($userLogado = null) {
         try {
             $this->repositoryDocumento->atualizarStatusViradaDeDia();
             $dados = $this->repositoryDocumento->resumoDashboardGlobal(); 
@@ -90,7 +90,7 @@ class DocumentoController {
         } catch (Exception $e) { return json_encode(["erro" => true, "message" => $e->getMessage()]); }
     }
 
-    public function listarProducaoGlobal($status) {
+    public function listarProducaoGlobal($status, $userLogado = null) {
         try {
             $this->repositoryDocumento->atualizarStatusViradaDeDia();
             $dados = $this->repositoryDocumento->listarProducaoGlobal($status); 
@@ -98,7 +98,36 @@ class DocumentoController {
         } catch (Exception $e) { return json_encode(["erro" => true, "message" => $e->getMessage()]); }
     }
 
-    public function gerarLoteZip($idsJson) {
+    public function buscarDetalhesPublicos($idCard) {
+        try {
+            // CORREÇÃO AQUI: Mudamos de $this->repository para $this->repositoryDocumento
+            $documento = $this->repositoryDocumento->buscarPorIdCard($idCard);
+
+            if (!$documento) {
+                // Se não achar, retorna 404
+                http_response_code(404);
+                return json_encode([
+                    "erro" => true, 
+                    "message" => "Documento não encontrado na base UNES."
+                ]);
+            }
+
+            // Retorna os dados para o fiscal (Público)
+            return json_encode([
+                "erro" => false,
+                "dados" => $documento
+            ]);
+            
+        } catch (Exception $e) {
+            http_response_code(500);
+            return json_encode([
+                "erro" => true, 
+                "message" => "Erro interno: " . $e->getMessage()
+            ]);
+        }
+    }
+
+    public function gerarLoteZip($idsJson, $userLogado = null) {
         try {
             $ids = $idsJson['ids'] ?? [];
             if (empty($ids)) throw new Exception("Nenhum documento selecionado.");
@@ -136,20 +165,23 @@ class DocumentoController {
                             <Cell><Data ss:Type="String">dataSolicitacao</Data></Cell>
                         </Row>';
 
+            // Helper para escapar dados no XML (previne injeção)
+            $esc = function($v) { return htmlspecialchars($v ?? '', ENT_XML1, 'UTF-8'); };
+
             foreach ($documentos as $doc) {
                 // Formata as datas para o padrão brasileiro
                 $dNasc = date("d/m/Y", strtotime($doc['dataNascDocumento']));
                 $dSolicitacao = date("d/m/Y", strtotime($doc['dataCriacao']));
 
                 $excelContent .= '<Row>
-                    <Cell><Data ss:Type="String">'.$doc['idCard'].'</Data></Cell>
-                    <Cell><Data ss:Type="String">'.$doc['NomeDocumento'].'</Data></Cell>
-                    <Cell><Data ss:Type="String">'.$doc['InsEnsinoDocumento'].'</Data></Cell>
-                    <Cell><Data ss:Type="String">'.$doc['serieDocumento'].'</Data></Cell>
-                    <Cell><Data ss:Type="String">'.$doc['nCPF'].'</Data></Cell>
-                    <Cell><Data ss:Type="String">'.$doc['nRGDocumento'].'</Data></Cell>
-                    <Cell><Data ss:Type="String">'.$dNasc.'</Data></Cell>
-                    <Cell><Data ss:Type="String">'.$dSolicitacao.'</Data></Cell>
+                    <Cell><Data ss:Type="String">'.$esc($doc['idCard']).'</Data></Cell>
+                    <Cell><Data ss:Type="String">'.$esc($doc['NomeDocumento']).'</Data></Cell>
+                    <Cell><Data ss:Type="String">'.$esc($doc['InsEnsinoDocumento']).'</Data></Cell>
+                    <Cell><Data ss:Type="String">'.$esc($doc['serieDocumento']).'</Data></Cell>
+                    <Cell><Data ss:Type="String">'.$esc($doc['nCPF']).'</Data></Cell>
+                    <Cell><Data ss:Type="String">'.$esc($doc['nRGDocumento']).'</Data></Cell>
+                    <Cell><Data ss:Type="String">'.$esc($dNasc).'</Data></Cell>
+                    <Cell><Data ss:Type="String">'.$esc($dSolicitacao).'</Data></Cell>
                 </Row>';
                 
                 $caminhoFoto = dirname(__DIR__) . '/../' . $doc['fotoDocumento'];

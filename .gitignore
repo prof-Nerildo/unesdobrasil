@@ -2,3 +2,10 @@ appsettings.json
 vendor/
 img-validacao/
 .env
+*.zip
+*.sql
+lixo.txt
+teste_db.php
+zip_temp/
+appsettings copy.json
+bkp-*.zip

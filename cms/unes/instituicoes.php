@@ -200,8 +200,27 @@ table th:hover {
         } else {
             listaFiltrada = todasInstituicoes;
         }
+
+        // Aplica busca por texto se houver algo digitado
+        const textoBusca = document.getElementById('inputBusca').value;
+        if (textoBusca.trim() !== '') {
+            const termo = textoBusca.toLowerCase().trim();
+            listaFiltrada = listaFiltrada.filter(i => {
+                const nome = (i.nome_fantasia || '').toLowerCase();
+                const cidade = (i.cidade || '').toLowerCase();
+                const responsavel = (i.responsavel || '').toLowerCase();
+                const email = (i.email_usuario || '').toLowerCase();
+                const codigo = (i.idLegado || i.idInstituicao || '').toString();
+                return nome.includes(termo) || cidade.includes(termo) || responsavel.includes(termo) || email.includes(termo) || codigo.includes(termo);
+            });
+        }
+
         paginaAtual = 1;
         renderizarTabela(); 
+    }
+
+    function filtrarPorTexto() {
+        aplicarFiltro(filtroAtivo);
     }
 
     function renderizarTabela() {
@@ -254,7 +273,7 @@ table th:hover {
         if (confirm("Deseja realmente desativar esta instituição?")) {
             try {
                 // 1. Avisa o banco de dados
-                const res = await chamarApi(`/api/instituicao/status/${id}`, 'PUT', { idStatus: 1 });
+                const res = await chamarApi(`/instituicao/status/${id}`, 'PUT', { idStatus: 1 });
                 
                 if (!res.erro) {
                     // 2. Remove da memória local imediatamente para ela sumir da tela

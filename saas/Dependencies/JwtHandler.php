@@ -5,7 +5,7 @@ namespace Dependencies;
 use Exception;
 
 class JwtHandler {
-    private $secret = "Leite_Com_MangaRosa_Mata_todos_kkk@2026";
+    private $secret = '';
 
     public function __construct() {
         $jsonPath = __DIR__ . '/../appsettings.json';
@@ -14,6 +14,9 @@ class JwtHandler {
             if (isset($config['AppSettings']['JwtSecret'])) {
                 $this->secret = $config['AppSettings']['JwtSecret'];
             }
+        }
+        if (empty($this->secret)) {
+            throw new \Exception("JwtSecret não configurado. Verifique o appsettings.json.");
         }
     }
 

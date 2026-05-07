@@ -1,5 +1,6 @@
 <?php
-$file = $_GET['file'] ?? '';
+// Sanitização: basename() remove qualquer tentativa de Path Traversal (../../etc/passwd)
+$file = basename($_GET['file'] ?? '');
 
 // dirname(__DIR__) sobe de 'Dependencies' para a raiz 'saas'
 $path = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'zip_temp' . DIRECTORY_SEPARATOR . $file;
@@ -20,5 +21,5 @@ if (!empty($file) && file_exists($path) && strpos($file, 'Lote_') === 0) {
     exit;
 } else {
     http_response_code(404);
-    die("Erro: Arquivo não encontrado no servidor. Caminho tentado: " . $path);
+    die("Erro: Arquivo não encontrado.");
 }

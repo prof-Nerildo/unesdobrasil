@@ -17,28 +17,34 @@
         <div class="card-table">
             <div class="table-header-info" style="padding: 15px; background: #f8fafc; border-bottom: 2px solid #edf2f7;">
                 <h3 style="font-size: 11px; font-weight: 700; color: #4a5568; text-transform: uppercase;">
-                    <i class="fas fa-archive"></i> Histórico de Entregas
+                    <i class="fas fa-archive"></i> EXIBINDO: ENTREGUES
                 </h3>
             </div>
             <div class="table-responsive">
                 <table class="table-custom">
                     <thead>
                         <tr>
-                            <th>idCard</th>
-                            <th>NOME COMPLETO</th>
+                            <th data-col="idCard" onclick="ordenarEntregues('idCard')" style="cursor:pointer">idCard <i class="fas fa-sort" style="opacity:0.3"></i></th>
+                            <th data-col="NomeDocumento" onclick="ordenarEntregues('NomeDocumento')" style="cursor:pointer">NOME <i class="fas fa-sort" style="opacity:0.3"></i></th>
                             <th>INST. ENSINO</th>
+                            <th>CURSO</th>
                             <th>CPF</th>
+                            <th>RG</th>
+                            <th>NASC.</th>
                             <th>FOTO</th>
-                            <th>DATA ENTREGA</th>
-                            <th>AÇÕES</th>
+                            <th>SOLICITAÇÃO</th>
+                            <th>ATUALIZAÇÃO</th>
+                            <th>AÇÃO</th>
                         </tr>
                     </thead>
                     <tbody id="tabela_entregues_corpo">
-                        <tr><td colspan="7" class="text-center" style="padding:40px;">Carregando...</td></tr>
+                        <tr><td colspan="11" class="text-center" style="padding:40px;">Carregando...</td></tr>
                     </tbody>
                 </table>
             </div>
         </div>
+
+        <div id="paginador-entregues" class="paginacao-container"></div>
     </section>
 </main>
 
@@ -82,6 +88,17 @@
     border-color: #1abc9c;
     box-shadow: 0 0 0 3px rgba(26, 188, 156, 0.1);
 }
+
+/* Paginação */
+.paginacao-container { display: flex; justify-content: center; align-items: center; gap: 8px; margin: 30px 0; }
+.btn-pag { min-width: 40px; height: 40px; padding: 0 10px; border: 1px solid #e0e0e0; background: #fff; color: #555; border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.btn-pag:hover { background: #f0f0f0; border-color: #bbb; }
+.btn-pag.active { background: #2c3e50; color: #fff; border-color: #2c3e50; box-shadow: 0 4px 10px rgba(44, 62, 80, 0.2); }
+
+/* Ordenação */
+th[data-col]:hover { background-color: #f1f1f1 !important; color: #3182ce; }
+th i { margin-left: 5px; font-size: 10px; color: #3182ce; }
 </style>
 
+<script src="../js/env.php"></script>
 <script src="../js/entregues.js"></script>

@@ -27,8 +27,8 @@
                 <table class="table-custom">
                     <thead>
                         <tr>
-                            <th>idCard</th>
-                            <th>NOME COMPLETO</th>
+                            <th data-col="idCard" onclick="ordenarProducao('idCard')" style="cursor:pointer">idCard <i class="fas fa-sort" data-sort="idCard" style="opacity:0.3"></i></th>
+                            <th data-col="NomeDocumento" onclick="ordenarProducao('NomeDocumento')" style="cursor:pointer">NOME COMPLETO <i class="fas fa-sort" data-sort="NomeDocumento" style="opacity:0.3"></i></th>
                             <th>INST. ENSINO</th>
                             <th>SÉRIE/CURSO</th>
                             <th>CPF</th>
@@ -46,6 +46,8 @@
             </div>
         </div>
     </section>
+
+    <div id="paginador-producao" class="paginacao-container"></div>
 </main>
 
 <style>
@@ -85,8 +87,19 @@
     .btn-edit-table:hover { color: #dd6b20; }
     .btn-sucesso { background: #1abc9c; color: #fff; border: none; padding: 8px 15px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 10px; }
     .btn-sucesso:hover { background: #16a085; }
+
+    /* Paginação */
+    .paginacao-container { display: flex; justify-content: center; align-items: center; gap: 8px; margin: 30px 0; }
+    .btn-pag { min-width: 40px; height: 40px; padding: 0 10px; border: 1px solid #e0e0e0; background: #fff; color: #555; border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+    .btn-pag:hover { background: #f0f0f0; border-color: #bbb; }
+    .btn-pag.active { background: #2c3e50; color: #fff; border-color: #2c3e50; box-shadow: 0 4px 10px rgba(44, 62, 80, 0.2); }
+    
+    /* Ordenação */
+    th[data-col]:hover { background-color: #f1f1f1 !important; color: #3182ce; }
+    th i { margin-left: 5px; font-size: 10px; color: #3182ce; }
 </style>
 
+<script src="../js/env.php"></script>
 <script src="../js/producao.js"></script>
 
 <?php include_once '../includes/footerUnes-2.php'; ?>

@@ -55,8 +55,6 @@ class DocumentoRepository {
      */
     public function create(\Models\RegisterRequestModelDocumento $request) {
         try {
-            // 0. AJUSTE DE FUSO HORÁRIO
-            date_default_timezone_set('America/Sao_Paulo');
             $anoAtualBr = date('Y');
 
             if (!$this->db->inTransaction()) {
@@ -187,8 +185,6 @@ class DocumentoRepository {
 
     public function update($idCard, $dados) {
         try {
-            // FORÇA FUSO BRASIL
-            date_default_timezone_set('America/Sao_Paulo');
             $agora = date('Y-m-d H:i:s');
 
             $sqlFoto = "";
@@ -222,7 +218,7 @@ class DocumentoRepository {
                         dataNascDocumento = :nasc,
                         nCPF = :cpf,
                         nRGDocumento = :rg,
-                        dataAtualizacao = :agora
+                        dataAlteracao = :agora
                         $sqlFoto
                     WHERE idCard = :idCard";
 
@@ -302,10 +298,6 @@ class DocumentoRepository {
 
     public function atualizarStatusViradaDeDia() {
         try {
-            // 1. Forçamos o PHP a entender que estamos no Brasil
-            date_default_timezone_set('America/Sao_Paulo');
-            
-            // 2. Pegamos a data atual do Brasil via PHP para passar ao MySQL
             $hojeBrasil = date('Y-m-d');
 
             // 3. Na query, comparamos a data de criação com a data que o PHP gerou.

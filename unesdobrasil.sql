@@ -114,6 +114,7 @@ CREATE TABLE `endereco` (
 
 CREATE TABLE `instituicao` (
   `idInstituicao` int NOT NULL,
+  `idLegado` int DEFAULT NULL,
   `razao_social` varchar(255) NOT NULL,
   `nome_fantasia` varchar(255) DEFAULT NULL,
   `cnpj` varchar(20) NOT NULL,
@@ -126,7 +127,8 @@ CREATE TABLE `instituicao` (
   `pode_editar_curso` enum('sim','nao') DEFAULT 'nao',
   `label_edita_curso` varchar(255) DEFAULT 'Série / Curso',
   `idStatus` int DEFAULT '3',
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
