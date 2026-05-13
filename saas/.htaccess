@@ -1,0 +1,11 @@
+# Garante que o header Authorization é repassado para o PHP
+# Necessário no Apache/Laragon que por padrão pode bloquear esse header
+
+RewriteEngine On
+
+# Repassa o header Authorization como variável de ambiente
+RewriteCond %{HTTP:Authorization} .
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+# Fallback: aceita via SetEnvIf também
+SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1

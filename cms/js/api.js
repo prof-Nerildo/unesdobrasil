@@ -36,14 +36,15 @@ async function chamarApi(endpoint, metodo = 'GET', dados = null) {
             return { erro: true, message: "Erro interno no servidor PHP." };
         }
 
-        // --- NOVO: LÓGICA DE ACL E PERMISSÃO ---
-        if (response.status === 401 || response.status === 403) {
+        // --- LÓGICA DE ACL E PERMISSÃO ---
+        if (response.status === 401) {
             const paginaAtual = window.location.pathname;
-            if (!paginaAtual.endsWith('../login.html')) {
+            // Só redireciona se NÃO estiver já na página de login
+            if (!paginaAtual.includes('login')) {
                 localStorage.removeItem('token_unes');
-                localStorage.removeItem('user_unes'); // Limpa dados do usuário também
+                localStorage.removeItem('user_unes');
                 window.location.replace('../login.html');
-                return { erro: true, message: "Acesso negado ou sessão expirada." };
+                return { erro: true, message: "Sessão expirada. Redirecionando..." };
             }
         }
 
@@ -115,8 +116,12 @@ async function atualizarCards() {
  * Faz o logout limpando tudo
  */
 function logout() {
-    if(confirm("Deseja realmente sair?")) {
-        localStorage.clear();
-        window.location.href = '../login.html';
+    if(confirm("Deseja realmente sair do sistema?")) {
+        localStorage.removeItem('token_unes');
+        localStorage.removeItem('user_unes');
+        // Calcula o caminho correto para login independente de subpasta
+        const path = window.location.pathname;
+        const baseCms = path.substring(0, path.indexOf('/cms/') + 5);
+        window.location.replace(baseCms + 'login.html');
     }
 }

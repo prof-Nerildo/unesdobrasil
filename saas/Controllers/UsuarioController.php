@@ -125,6 +125,29 @@ class UsuarioController {
         }
     }
 
+    public function update($id, $dadosJson, $userLogado) {
+        try {
+            // Se mudar a senha, aplica sua lógica complexa de segurança
+            if (!empty($dadosJson['senha'])) {
+                $stringComplexa = $this->montarStringCriptografia($dadosJson['senha'], $dadosJson['email']);
+                $dadosJson['senha'] = password_hash($stringComplexa, PASSWORD_BCRYPT);
+            }
+
+            $sucesso = $this->repositoryUsuario->update($id, $dadosJson);
+            return json_encode(["erro" => !$sucesso, "message" => $sucesso ? "Usuário atualizado!" : "Sem alterações."]);
+        } catch (Exception $e) {
+            return json_encode(["erro" => true, "message" => $e->getMessage()]);
+        }
+    }
+
+    public function listarTodos($userLogado) {
+        // Admin (ACL 1 = Master) e Unes (ACL 2) podem listar usuários
+        if($userLogado['idAcl'] != 1 && $userLogado['idAcl'] != 2) {
+            return json_encode(["erro" => true, "message" => "Acesso não autorizado."]);
+        }
+        return json_encode(["erro" => false, "dados" => $this->repositoryUsuario->listarTodos()]);
+    }
+
     public function forgotPassword($dadosJson) {
         try {
             $login = $dadosJson['login'] ?? '';
@@ -219,6 +242,106 @@ class UsuarioController {
             
             $id = $this->repositoryUsuario->create($model);
             return json_encode(["erro" => false, "id" => $id, "message" => "Usuário registrado com sucesso!"]);
+        } catch (Exception $e) {
+            return json_encode(["erro" => true, "message" => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Busca um usuário UNES por ID
+     */
+    public function buscarUsuario($id, $userLogado) {
+        try {
+            if ($userLogado['idAcl'] != 1 && $userLogado['idAcl'] != 2) {
+                return json_encode(["erro" => true, "message" => "Acesso não autorizado."]);
+            }
+            $usuario = $this->repositoryUsuario->buscarPorId($id);
+            if (!$usuario) {
+                return json_encode(["erro" => true, "message" => "Usuário não encontrado."]);
+            }
+            return json_encode(["erro" => false, "dados" => $usuario]);
+        } catch (Exception $e) {
+            return json_encode(["erro" => true, "message" => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Cria um novo usuário UNES (ACL 2)
+     */
+    public function criarUsuarioUnes($dadosJson, $userLogado) {
+        try {
+            if ($userLogado['idAcl'] != 1 && $userLogado['idAcl'] != 2) {
+                return json_encode(["erro" => true, "message" => "Acesso não autorizado."]);
+            }
+
+            // Força ACL 2 (UNES), Status 2 (Ativo), Perfil conforme enviado (2=Admin, 3=Colaborador)
+            $dadosJson['idAcl'] = 2;
+            $dadosJson['idStatus'] = 2;
+            $dadosJson['idPerfil'] = $dadosJson['idPerfil'] ?? 3; // Default: Colaborador UNES
+
+            // Validação básica
+            if (empty($dadosJson['primeiro_nome']) || empty($dadosJson['email']) || 
+                empty($dadosJson['username']) || empty($dadosJson['senha'])) {
+                return json_encode(["erro" => true, "message" => "Preencha todos os campos obrigatórios."]);
+            }
+
+            // Verifica se email/username já existem
+            if ($this->repositoryUsuario->emailOuUsernameExiste($dadosJson['email'], $dadosJson['username'])) {
+                return json_encode(["erro" => true, "message" => "E-mail ou usuário já cadastrado."]);
+            }
+
+            $model = new RegisterRequestModelUsuario($dadosJson);
+            $passCrip = $this->montarStringCriptografia($dadosJson['senha'], $model->email);
+            $model->senha = password_hash($passCrip, PASSWORD_BCRYPT);
+
+            $id = $this->repositoryUsuario->create($model);
+            return json_encode(["erro" => false, "id" => $id, "message" => "Usuário UNES criado com sucesso!"]);
+        } catch (Exception $e) {
+            return json_encode(["erro" => true, "message" => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Atualiza dados de um usuário UNES
+     */
+    public function atualizarUsuario($id, $dadosJson, $userLogado) {
+        try {
+            if ($userLogado['idAcl'] != 1 && $userLogado['idAcl'] != 2) {
+                return json_encode(["erro" => true, "message" => "Acesso não autorizado."]);
+            }
+
+            // Se mudar a senha, aplica criptografia
+            if (!empty($dadosJson['senha'])) {
+                $stringComplexa = $this->montarStringCriptografia($dadosJson['senha'], $dadosJson['email']);
+                $dadosJson['senha'] = password_hash($stringComplexa, PASSWORD_BCRYPT);
+            }
+
+            $sucesso = $this->repositoryUsuario->update($id, $dadosJson);
+            return json_encode(["erro" => !$sucesso, "message" => $sucesso ? "Usuário atualizado!" : "Sem alterações."]);
+        } catch (Exception $e) {
+            return json_encode(["erro" => true, "message" => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Suspende ou reativa um usuário (alterna status entre 2=Ativo e 4=Suspenso)
+     */
+    public function suspenderUsuario($id, $dadosJson, $userLogado) {
+        try {
+            if ($userLogado['idAcl'] != 1 && $userLogado['idAcl'] != 2) {
+                return json_encode(["erro" => true, "message" => "Acesso não autorizado."]);
+            }
+
+            $novoStatus = $dadosJson['idStatus'] ?? 4; // Default: Suspenso
+
+            // Só permite alternar entre Ativo (2) e Suspenso (4)
+            if (!in_array($novoStatus, [2, 4])) {
+                return json_encode(["erro" => true, "message" => "Status inválido. Use 2 (Ativo) ou 4 (Suspenso)."]);
+            }
+
+            $sucesso = $this->repositoryUsuario->atualizarStatus($id, $novoStatus);
+            $statusNome = $novoStatus == 4 ? 'suspenso' : 'reativado';
+            return json_encode(["erro" => !$sucesso, "message" => $sucesso ? "Usuário {$statusNome} com sucesso!" : "Erro ao alterar status."]);
         } catch (Exception $e) {
             return json_encode(["erro" => true, "message" => $e->getMessage()]);
         }

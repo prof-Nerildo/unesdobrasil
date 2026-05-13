@@ -26,28 +26,24 @@
                         <input type="text" id="nome_escola_fixo" placeholder="Ex: Escola Estadual Machado de Assis">
                     </div>
 
-                    <div class="grid-2 mb-3">
-                        <div class="field">
+                    <div class="field mb-3">
                             <label>Série / Curso</label>
                             <input type="text" id="curso_aluno" placeholder="Ex: 3º Ano Ensino Médio">
-                        </div>
-                        <div class="field">
-                            <label>Data de Nascimento <span style="color:red">*</span></label>
-                            <input type="date" id="data_nascimento">
-                        </div>
                     </div>
-
-                    <div class="grid-2">
-                        <div class="field">
+                    <div class="field mb-3">
                             <label>CPF <span style="color:red">*</span></label>
                             <input type="text" id="cpf_aluno" placeholder="000.000.000-00">
-                        </div>
-                        <div class="field">
+                    </div>
+                    <div class="field mb-3">
                             <label>RG / Identidade <span style="color:red">*</span></label>
                             <input type="text" id="rg_aluno" placeholder="Número do RG">
-                        </div>
                     </div>
-                </div> <div class="form-section column-right">
+                    <div class="field mb-3">
+                            <label>Data de Nascimento <span style="color:red">*</span></label>
+                            <input type="date" id="data_nascimento">
+                    </div>
+                </div> 
+                <div class="form-section column-right">
                     <h3><i class="fas fa-camera"></i> Foto do Documento</h3>
                     
                     <div class="guide-container mb-4">
@@ -82,6 +78,7 @@
 
                     <div class="field">
                         <label>Selecione a Imagem (3x4)</label>
+                        <p style="font-size: 12px; color: #f00; text-align: center;">Imagens em (PNG | JPG | JPEG)</p>
                         <input type="file" id="input_foto" accept="image/jpeg,image/png" onchange="iniciarCrop(event)">
                     </div>
 
@@ -104,7 +101,9 @@
                             <i class="fas fa-sync-alt"></i> Trocar Foto
                         </button>
                     </div>
-                </div> </div> <hr class="divider">
+                </div> 
+            </div> 
+            <hr class="divider">
 
             <div class="form-actions-footer">
                 <button class="btn-limpar-footer" onclick="limparCamposAluno()">

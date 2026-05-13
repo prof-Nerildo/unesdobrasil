@@ -2,30 +2,32 @@
 
 namespace Dependencies;
 
-use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
+use PHPMailer\PHPMailer\PHPMailer;
 
 // Verifica se o autoload existe antes de carregar
 if (file_exists(__DIR__ . '/../../vendor/autoload.php')) {
     require_once __DIR__ . '/../../vendor/autoload.php';
 }
 
-class EmailHandler {
+class EmailHandler
+{
     private $mail;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->mail = new PHPMailer(true);
         $this->mail->SMTPDebug = 0;
-        
+
         // 1. Configurações do Servidor
         $this->mail->isSMTP();
-        $this->mail->Host       = 'mail.webdna.com.br'; 
-        $this->mail->SMTPAuth   = true;
-        $this->mail->Username   = 'send@webdna.com.br'; 
-        $this->mail->Password   = 'Aero@418731';
-        $this->mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS; // SSL (Porta 465)
-        $this->mail->Port       = 465;
-        $this->mail->CharSet    = 'UTF-8';
+        $this->mail->Host = 'mail.webdna.com.br';
+        $this->mail->SMTPAuth = true;
+        $this->mail->Username = 'send@webdna.com.br';
+        $this->mail->Password = 'Aero@418731';
+        $this->mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;  // SSL (Porta 465)
+        $this->mail->Port = 465;
+        $this->mail->CharSet = 'UTF-8';
 
         // 2. A "Vacina" para Localhost (ignora erro de certificado SSL no Laragon/XAMPP)
         $this->mail->SMTPOptions = array(
@@ -39,24 +41,25 @@ class EmailHandler {
         $this->mail->setFrom('send@webdna.com.br', 'UNES Brasil');
     }
 
-    public function enviarRecuperacao($emailDestino, $nomeUsuario, $token) {
+    public function enviarRecuperacao($emailDestino, $nomeUsuario, $token)
+    {
         try {
             // Limpa destinatários anteriores para não enviar em duplicidade
 
             if (empty($emailDestino)) {
-                return false; // Evita o erro "Invalid address"
+                return false;  // Evita o erro "Invalid address"
             }
 
-
             $this->mail->clearAddresses();
-            
+
             // O link aponta para o arquivo que criamos no passo anterior
-            $link = "http://localhost/unesdobrasil/cms/redefinir-senha.html?token=" . $token;
-            
+            // $link = "http://localhost/unesdobrasil/cms/redefinir-senha.html?token=" . $token;
+            $link = 'http://www.webdna.com.br/unes/cms/redefinir-senha.html?token=' . $token;
+
             $this->mail->addAddress($emailDestino, $nomeUsuario);
             $this->mail->isHTML(true);
             $this->mail->Subject = 'Recuperação de Senha - UNES Brasil';
-            
+
             // Corpo HTML
             $this->mail->Body = "
                 <div style='font-family: Arial, sans-serif; color: #333;'>
@@ -79,8 +82,8 @@ class EmailHandler {
             return $this->mail->send();
         } catch (Exception $e) {
             // Em caso de erro, você pode conferir o log com $this->mail->ErrorInfo se necessário
-            throw new \Exception("Erro PHPMailer: " . $this->mail->ErrorInfo);
-            //return false;
+            throw new \Exception('Erro PHPMailer: ' . $this->mail->ErrorInfo);
+            // return false;
         }
     }
 }

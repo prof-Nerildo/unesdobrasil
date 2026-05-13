@@ -99,4 +99,74 @@ class UsuarioRepository {
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([':senha' => $novaSenhaHash, ':email' => $email]);
     }
+
+    public function update($id, $dados) {
+        $campos = [];
+        $params = [':id' => $id];
+
+        // Mapeamento correto das colunas do seu banco
+        if (!empty($dados['primeiro_nome'])) {
+            $campos[] = "primeiro_nome = :p_nome";
+            $params[':p_nome'] = $dados['primeiro_nome'];
+        }
+        if (!empty($dados['sobrenome'])) {
+            $campos[] = "sobrenome = :sobrenome";
+            $params[':sobrenome'] = $dados['sobrenome'];
+        }
+        if (!empty($dados['email'])) {
+            $campos[] = "email = :email";
+            $params[':email'] = $dados['email'];
+        }
+        if (!empty($dados['cargo'])) {
+            $campos[] = "cargo = :cargo";
+            $params[':cargo'] = $dados['cargo'];
+        }
+        if (!empty($dados['senha'])) { // No controller você trata a criptografia
+            $campos[] = "senha = :senha";
+            $params[':senha'] = $dados['senha'];
+        }
+        if (isset($dados['idAcl'])) {
+            $campos[] = "idAcl = :idAcl";
+            $params[':idAcl'] = $dados['idAcl'];
+        }
+
+        if (empty($campos)) return false;
+
+        // Ajustado para 'usuario' e 'idUsuario' conforme seu findMe
+        $sql = "UPDATE usuario SET " . implode(', ', $campos) . " WHERE idUsuario = :id";
+        
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute($params);
+    }
+
+    // Aproveita e adiciona este para listar todos na sua tela
+    public function listarTodos() {
+        $sql = "SELECT u.idUsuario as id, u.primeiro_nome, u.sobrenome, u.email, u.cargo, 
+                       a.tipo as nivel, s.tipo as status, u.idStatus
+                FROM usuario u 
+                INNER JOIN acl a ON u.idAcl = a.idAcl
+                INNER JOIN status s ON u.idStatus = s.idStatus
+                WHERE u.idAcl = 2
+                ORDER BY u.primeiro_nome ASC";
+        return $this->db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function buscarPorId($id) {
+        $sql = "SELECT u.idUsuario as id, u.primeiro_nome, u.sobrenome, u.email, u.cargo,
+                       u.idAcl, u.idStatus, u.idPerfil, u.username,
+                       a.tipo as nivel, s.tipo as status
+                FROM usuario u
+                INNER JOIN acl a ON u.idAcl = a.idAcl
+                INNER JOIN status s ON u.idStatus = s.idStatus
+                WHERE u.idUsuario = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':id' => $id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function atualizarStatus($id, $idStatus) {
+        $sql = "UPDATE usuario SET idStatus = :status WHERE idUsuario = :id";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([':status' => $idStatus, ':id' => $id]);
+    }
 }

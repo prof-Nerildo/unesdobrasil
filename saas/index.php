@@ -50,8 +50,24 @@ try {
 
     // --- HELPER DE TOKEN ---
     $validarToken = function($nivelRequerido = null) use ($jwt) {
-        $headers = getallheaders();
-        $auth = $headers['Authorization'] ?? $headers['authorization'] ?? '';
+        $auth = '';
+        
+        // 1. Tenta getallheaders() (funciona na maioria dos cenários)
+        if (function_exists('getallheaders')) {
+            $headers = getallheaders();
+            $auth = $headers['Authorization'] ?? $headers['authorization'] ?? '';
+        }
+        
+        // 2. Fallback: Apache com mod_rewrite repassa via $_SERVER
+        if (empty($auth) && !empty($_SERVER['HTTP_AUTHORIZATION'])) {
+            $auth = $_SERVER['HTTP_AUTHORIZATION'];
+        }
+        
+        // 3. Fallback: Apache com RewriteRule repassa via REDIRECT_
+        if (empty($auth) && !empty($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
+            $auth = $_SERVER['REDIRECT_HTTP_AUTHORIZATION'];
+        }
+
         $token = str_replace('Bearer ', '', $auth);
         $dados = $jwt->decode($token);
         if (!$dados) { throw new Exception("Sessão expirada.", 401); }
@@ -142,6 +158,21 @@ try {
         // ROTA PARA GERAR LOTE (POST)
         $method === 'POST' && str_contains($uri, 'api/documento/gerar-lote') => 
             $docController->gerarLoteZip($dadosJson, $validarToken()),
+
+        $method === 'GET' && str_contains($uri, 'api/usuarios/todos') => 
+            $userController->listarTodos($validarToken()),
+
+        $method === 'GET' && str_contains($uri, 'api/usuarios/buscar/') => 
+            $userController->buscarUsuario(basename($uri), $validarToken()),
+
+        $method === 'POST' && str_contains($uri, 'api/usuarios/criar') => 
+            $userController->criarUsuarioUnes($dadosJson, $validarToken()),
+
+        $method === 'PUT' && str_contains($uri, 'api/usuarios/atualizar/') => 
+            $userController->atualizarUsuario(basename($uri), $dadosJson, $validarToken()),
+
+        $method === 'PUT' && str_contains($uri, 'api/usuarios/suspender/') => 
+            $userController->suspenderUsuario(basename($uri), $dadosJson, $validarToken()),
 
         // NOVA ROTA PÚBLICA PARA VALIDAÇÃO (QR CODE / FISCAL)
         $method === 'GET' && str_contains($uri, 'api/documento/validar-publico/') => 

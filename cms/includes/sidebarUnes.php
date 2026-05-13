@@ -5,6 +5,10 @@
         <li><a href="dashboard.php"><i class="fas fa-home"></i> Painel</a></li>
         
         <li><hr style="opacity: 0.1; margin: 10px 0;"></li>
+        <li class="menu-unes" style="display:none;">
+            <a href="usuarios.php"><i class="fas fa-users-cog"></i> Usuários</a>
+        </li>
+        <li><hr style="opacity: 0.1; margin: 10px 0;"></li>
 
         <li class="menu-unes" style="display:none;">
             <a href="instituicoes.php"><i class="fas fa-university"></i> Instituições</a>
@@ -21,12 +25,10 @@
             </ul>
         </li>
 
-        <li class="menu-escola" style="display:none;">
-            <a href="usuarios.php"><i class="fas fa-users-cog"></i> Usuários</a>
-        </li>
 
         <li><hr style="opacity: 0.1; margin: 10px 0;"></li>
 
+        
         <li><a href="javascript:void(0)" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
     </ul>
 </nav>
