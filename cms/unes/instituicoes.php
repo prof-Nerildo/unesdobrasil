@@ -14,8 +14,18 @@
             <?php include '../componentes/cards_instituicoes.php'; ?>
         </div>
 
-        <div class="search-container" style="margin: 0 20px 20px 20px;">
-            <input type="text" id="inputBusca" placeholder="🔍 Buscar por nome, cidade ou responsável..." onkeyup="filtrarPorTexto()">
+        <div class="search-container" style="margin: 0 20px 20px 20px; display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap;">
+            <input type="text" id="inputBusca" placeholder="🔍 Buscar por nome, cidade ou responsável..." onkeyup="filtrarPorTexto()" style="flex-grow: 1;">
+            
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <label for="itensPorPaginaSelect" style="font-size: 14px; font-weight: 600; color: #4a5568;">Exibir:</label>
+                <select id="itensPorPaginaSelect" onchange="mudarItensPorPagina()" style="padding: 10px; border: 1px solid #ddd; border-radius: 8px; outline: none; font-size: 14px; background: white; cursor: pointer;">
+                    <option value="10">10 linhas</option>
+                    <option value="25">25 linhas</option>
+                    <option value="50">50 linhas</option>
+                    <option value="100">100 linhas</option>
+                </select>
+            </div>
         </div>
 
         <div class="card-tabela">
@@ -34,8 +44,12 @@
                         <th onclick="ordenarPor('responsavel')" style="cursor:pointer">
                             Responsável <i class="fas fa-sort" id="sort-responsavel"></i>
                         </th>
-                        <th>Telefone</th>
-                        <th>E-mail</th>
+                        <th onclick="ordenarPor('telefone')" style="cursor:pointer">
+                            Telefone <i class="fas fa-sort" id="sort-telefone"></i>
+                        </th>
+                        <th onclick="ordenarPor('email_usuario')" style="cursor:pointer">
+                            E-mail <i class="fas fa-sort" id="sort-email_usuario"></i>
+                        </th>
                         <th style="text-align: center;">Ações</th>
                     </tr>
                 </thead>
@@ -169,7 +183,13 @@ table th:hover {
     let todasInstituicoes = []; 
     let listaFiltrada = [];    
     let paginaAtual = 1;
-    const itensPorPagina = 10;
+    let itensPorPagina = 10;
+
+    function mudarItensPorPagina() {
+        itensPorPagina = parseInt(document.getElementById('itensPorPaginaSelect').value);
+        paginaAtual = 1;
+        renderizarTabela();
+    }
     let filtroAtivo = 'todos'; 
 
     async function inicializarPagina() {

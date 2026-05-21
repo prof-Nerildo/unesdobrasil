@@ -95,6 +95,10 @@ try {
         $method === 'GET' && str_contains($uri, 'api/account/me') => 
             $userController->getMe($validarToken()),
 
+        // CADASTRO COMPLETO ATÔMICO (Instituição + Usuário numa só transação)
+        $method === 'POST' && str_contains($uri, 'api/cadastro/completo') => 
+            $instController->cadastrarCompleto($dadosJson, $userController),
+
         // INSTITUIÇÃO
         $method === 'POST' && str_contains($uri, 'api/instituicao/registrar') => 
             $instController->registrar($dadosJson),

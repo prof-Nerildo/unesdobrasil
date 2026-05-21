@@ -34,10 +34,39 @@ class RegisterRequestModelInstituicaoEnsino {
 
     public function validate() {
         $erros = [];
+
         if (empty($this->razao_social))  $erros[] = "Razão Social é obrigatória.";
-        if (empty($this->cnpj))          $erros[] = "CNPJ é obrigatório.";
+
+        // CNPJ: obrigatório e deve ter 14 dígitos (após remover máscara)
+        if (empty($this->cnpj)) {
+            $erros[] = "CNPJ é obrigatório.";
+        } else {
+            $cnpjDigitos = preg_replace('/\D/', '', $this->cnpj);
+            if (strlen($cnpjDigitos) !== 14) {
+                $erros[] = "CNPJ deve ter 14 dígitos.";
+            }
+        }
+
         if (empty($this->logradouro))    $erros[] = "Logradouro é obrigatório.";
         if (empty($this->cidade))        $erros[] = "Cidade é obrigatória.";
+
+        // E-mail institucional obrigatório
+        if (empty($this->email_contato)) {
+            $erros[] = "E-mail institucional é obrigatório.";
+        } elseif (!filter_var($this->email_contato, FILTER_VALIDATE_EMAIL)) {
+            $erros[] = "E-mail institucional inválido.";
+        }
+
+        // Telefone institucional obrigatório
+        if (empty($this->telefone)) {
+            $erros[] = "Telefone institucional é obrigatório.";
+        } else {
+            $telDigitos = preg_replace('/\D/', '', $this->telefone);
+            if (strlen($telDigitos) < 10) {
+                $erros[] = "Telefone institucional inválido (mínimo 10 dígitos).";
+            }
+        }
+
         return $erros;
     }
 }

@@ -45,11 +45,15 @@
                 <div class="grid-3 mb-3">
                     <div class="field">
                         <label>CEP</label>
-                        <input type="text" id="cep" placeholder="00000-000">
+                        <div class="cep-wrap">
+                            <input type="text" id="cep" placeholder="00000-000" maxlength="9">
+                            <div class="cep-spinner" id="cep-spinner"></div>
+                        </div>
+                        <span class="field-feedback" id="fb-cep"></span>
                     </div>
                     <div class="field" style="grid-column: span 2;">
                         <label>Logradouro</label>
-                        <input type="text" id="logradouro" placeholder="Rua, Av...">
+                        <input type="text" id="logradouro" placeholder="Preenchido pelo CEP" class="readonly-field" readonly>
                     </div>
                 </div>
                 <div class="grid-4 mb-3">
@@ -59,15 +63,15 @@
                     </div>
                     <div class="field">
                         <label>Bairro</label>
-                        <input type="text" id="bairro">
+                        <input type="text" id="bairro" class="readonly-field" readonly placeholder="Pelo CEP">
                     </div>
                     <div class="field">
                         <label>Cidade</label>
-                        <input type="text" id="cidade">
+                        <input type="text" id="cidade" class="readonly-field" readonly placeholder="Pelo CEP">
                     </div>
                     <div class="field">
                         <label>UF</label>
-                        <input type="text" id="uf" maxlength="2">
+                        <input type="text" id="uf" maxlength="2" class="readonly-field" readonly>
                     </div>
                 </div>
                 <div class="field">
@@ -87,7 +91,7 @@
                     </div>
                     <div class="field">
                         <label>Telefone Principal</label>
-                        <input type="text" id="telefone" placeholder="(00) 0000-0000">
+                        <input type="text" id="telefone" placeholder="(00) 00000-0000" maxlength="15">
                     </div>
                 </div>
             </div>
@@ -187,7 +191,26 @@
     .field { display: flex; flex-direction: column; gap: 8px; }
     .field label { font-weight: 600; color: #555; font-size: 13px; }
     .field input, .field select { padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; outline: none; }
-    .field input:focus { border-color: #f39c12; box-shadow: 0 0 5px rgba(243, 156, 18, 0.2); }
+    .field input:focus, .field select:focus { border-color: #f39c12; box-shadow: 0 0 5px rgba(243, 156, 18, 0.2); }
+
+    /* Campos preenchidos pelo ViaCEP */
+    .readonly-field { background: #f8f9fa !important; color: #6c757d; cursor: default; }
+    .readonly-field:focus { border-color: #ddd !important; box-shadow: none !important; }
+
+    /* Spinner do CEP */
+    .cep-wrap { position: relative; }
+    .cep-spinner {
+        position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+        width: 16px; height: 16px; border: 2px solid #f39c12;
+        border-top-color: transparent; border-radius: 50%;
+        animation: spin 0.7s linear infinite; display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Feedback inline do CEP */
+    .field-feedback { font-size: 12px; min-height: 16px; }
+    .field-feedback.ok   { color: #198754; }
+    .field-feedback.erro { color: #dc3545; }
     
     .divider { margin: 30px 0; border: 0; border-top: 1px solid #eee; }
     .mb-3 { margin-bottom: 20px; }

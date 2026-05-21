@@ -103,5 +103,53 @@ class InstituicaoEnsinoController {
             return json_encode(["erro" => true, "message" => $e->getMessage()]);
         }
     }
-    
+
+    /**
+     * Rota: POST /api/cadastro/completo
+     * Cria a instituição e o usuário administrador numa única transação.
+     * Se email/username já existirem, faz rollback de tudo e retorna erro 409.
+     *
+     * @param array            $dadosJson   Payload com chaves 'instituicao' e 'usuario'
+     * @param \Controllers\UsuarioController $userController  Para reutilizar o hash de senha
+     */
+    public function cadastrarCompleto(array $dadosJson, \Controllers\UsuarioController $userController) {
+        try {
+            $dadosInst = $dadosJson['instituicao'] ?? [];
+            $dadosUser = $dadosJson['usuario']     ?? [];
+
+            // --- Validação da Instituição ---
+            $modelInst = new \Models\RegisterRequestModelInstituicaoEnsino($dadosInst);
+            $errosInst = $modelInst->validate();
+            if (!empty($errosInst)) {
+                http_response_code(400);
+                return json_encode(["erro" => true, "campo" => "instituicao", "message" => implode(" ", $errosInst)]);
+            }
+
+            // --- Validação do Usuário ---
+            $modelUser = new \Models\RegisterRequestModelUsuario($dadosUser);
+            $errosUser = $modelUser->validate();
+            if (!empty($errosUser)) {
+                http_response_code(400);
+                return json_encode(["erro" => true, "campo" => "usuario", "message" => implode(" ", $errosUser)]);
+            }
+
+            // --- Gera o hash de senha usando o padrão do sistema (reutiliza lógica do UsuarioController) ---
+            $senhaHash = $userController->gerarHashSenha($dadosUser['senha'] ?? '', $modelUser->email);
+
+            // --- Executa a transação atômica ---
+            $resultado = $this->repoInst->createComAdministrador($modelInst, $modelUser, $senhaHash);
+
+            return json_encode([
+                "erro"          => false,
+                "idInstituicao" => $resultado['idInstituicao'],
+                "idUsuario"     => $resultado['idUsuario'],
+                "message"       => "Cadastro realizado com sucesso! Aguarde a aprovação da UNES."
+            ]);
+
+        } catch (Exception $e) {
+            $code = $e->getCode();
+            http_response_code($code >= 400 && $code <= 599 ? $code : 500);
+            return json_encode(["erro" => true, "message" => $e->getMessage()]);
+        }
+    }
 }

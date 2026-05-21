@@ -43,6 +43,15 @@ class UsuarioController {
         return $passSHA256 . $this->apiKey . $idSHA256;
     }
 
+    /**
+     * Gera o hash bcrypt final a partir da senha em texto claro e do email.
+     * Método público para ser reutilizado por outros controllers (ex: cadastro atômico).
+     */
+    public function gerarHashSenha(string $senha, string $email): string {
+        $stringComplexa = $this->montarStringCriptografia($senha, $email);
+        return password_hash($stringComplexa, PASSWORD_BCRYPT);
+    }
+
     public function login($dadosJson) {
         try {
             $loginInput = $dadosJson['login'] ?? '';

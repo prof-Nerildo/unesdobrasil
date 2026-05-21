@@ -7,8 +7,7 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; padding: 20px; color: #495057; }
         .container { max-width: 900px; margin: auto; }
         .card { background: white; padding: 35px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        
-        /* Título com a barrinha laranja igual ao seu Dashboard */
+
         .section-title {
             display: flex;
             align-items: center;
@@ -29,57 +28,114 @@
         }
 
         h2 { margin-top: 0; color: #2c3e50; border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 10px; }
-        
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+
+        .grid   { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .grid-3 { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 15px; }
         .full-width { grid-column: span 2; }
-        
+
         label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 0.85rem; color: #6c757d; }
-        input, select { 
-            width: 100%; padding: 10px; border: 1px solid #dee2e6; border-radius: 6px; 
+        label .req { color: #dc3545; margin-left: 2px; }
+
+        input, select {
+            width: 100%; padding: 10px; border: 1px solid #dee2e6; border-radius: 6px;
             box-sizing: border-box; font-size: 0.95rem; transition: 0.2s;
         }
-        input:focus { border-color: #f39c12; outline: none; box-shadow: 0 0 0 0.2rem rgba(243, 156, 18, 0.1); }
+        input:focus, select:focus { border-color: #f39c12; outline: none; box-shadow: 0 0 0 0.2rem rgba(243,156,18,0.1); }
 
-        .btn-action { 
-            width: 100%; padding: 15px; color: white; border: none; border-radius: 6px; 
-            cursor: pointer; font-size: 1.1rem; font-weight: bold; margin-top: 30px; 
+        /* Campos preenchidos pelo ViaCEP */
+        input[readonly] {
+            background: #f8f9fa;
+            color: #6c757d;
+            cursor: default;
+        }
+        input[readonly]:focus { border-color: #dee2e6; box-shadow: none; }
+
+        /* Indicador de carregamento do CEP */
+        .cep-wrap { position: relative; }
+        .cep-loading {
+            position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+            width: 18px; height: 18px; border: 2px solid #f39c12;
+            border-top-color: transparent; border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            display: none;
+        }
+        @keyframes spin { to { transform: translateY(-50%) rotate(360deg); } }
+
+        /* Feedback de validação inline */
+        .input-feedback { font-size: 0.78rem; margin-top: 4px; display: none; }
+        .input-feedback.erro  { color: #dc3545; display: block; }
+        .input-feedback.ok    { color: #198754; display: block; }
+
+        .btn-action {
+            width: 100%; padding: 15px; color: white; border: none; border-radius: 6px;
+            cursor: pointer; font-size: 1.1rem; font-weight: bold; margin-top: 20px;
             transition: 0.2s;
         }
-        .btn-next { background: #198754; } /* Verde para o Próximo */
+        .btn-next   { background: #198754; }
         .btn-next:hover { background: #146c43; }
-        
-        .btn-finish { background: #0d6efd; } /* Azul para o Finalizar */
-        .btn-finish:hover { background: #0a58ca; }
 
-        .step { display: none; }
+        .btn-finish { background: #0d6efd; }
+        .btn-finish:hover    { background: #0a58ca; }
+        .btn-finish:disabled { background: #6c757d; cursor: not-allowed; }
+
+        .btn-back  { background: #6c757d; margin-top: 10px; }
+        .btn-back:hover { background: #5a6268; }
+
+        .step   { display: none; }
         .active { display: block; animation: fadeIn 0.4s; }
-        
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         .msg-erro { color: #dc3545; background: #f8d7da; padding: 12px; border-radius: 6px; margin-top: 20px; display: none; font-size: 0.9rem; border: 1px solid #f5c2c7; }
+
+        /* Indicador de passo */
+        .steps-indicator {
+            display: flex; gap: 10px; margin-bottom: 25px; align-items: center;
+        }
+        .step-dot {
+            width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center;
+            justify-content: center; font-weight: bold; font-size: 0.9rem; flex-shrink: 0;
+        }
+        .step-dot.done    { background: #198754; color: white; }
+        .step-dot.current { background: #0d6efd; color: white; }
+        .step-dot.pending { background: #dee2e6; color: #6c757d; }
+        .step-line { flex: 1; height: 2px; background: #dee2e6; }
+        .step-line.done { background: #198754; }
+        .step-label { font-size: 0.8rem; color: #6c757d; white-space: nowrap; }
     </style>
 </head>
 <body>
 
 <div class="container">
+
+    <!-- ======= PASSO 1: Instituição ======= -->
     <div id="passo1" class="step active">
         <div class="card">
             <h2>Novo Cadastro Institucional</h2>
-            
+
+            <!-- Indicador de passo -->
+            <div class="steps-indicator">
+                <div class="step-dot current" id="dot1">1</div>
+                <span class="step-label">Instituição</span>
+                <div class="step-line" id="line1"></div>
+                <div class="step-dot pending" id="dot2">2</div>
+                <span class="step-label">Administrador</span>
+            </div>
+
             <div class="section-title">Dados Cadastrais</div>
             <div class="grid">
                 <div class="full-width">
-                    <label>Razão Social</label>
+                    <label>Razão Social <span class="req">*</span></label>
                     <input type="text" id="razao" placeholder="Razão Social completa">
                 </div>
                 <div>
-                    <label>CNPJ</label>
-                    <input type="text" id="cnpj" placeholder="00.000.000/0000-00">
+                    <label>CNPJ <span class="req">*</span></label>
+                    <input type="text" id="cnpj" placeholder="00.000.000/0000-00" maxlength="18"
+                           oninput="mascaraCnpj(this)" onblur="validarCnpj(this)">
+                    <span class="input-feedback" id="fb-cnpj"></span>
                 </div>
-                <div class="full-width">
+                <div>
                     <label>Nome Fantasia</label>
-                    <input type="text" id="fantasia" placeholder="Nome comercial">
+                    <input type="text" id="fantasia" placeholder="Nome comercial (deixe vazio para usar a Razão Social)">
                 </div>
                 <div>
                     <label>Insc. Estadual</label>
@@ -92,190 +148,395 @@
             </div>
 
             <div class="section-title">Localização</div>
-            <div class="grid-3">
-                <div class="full-width">
-                    <label>Endereço (Logradouro)</label>
-                    <input type="text" id="rua" placeholder="Av, Rua, Travessa...">
-                </div>
+            <div class="grid">
+                <!-- CEP -->
                 <div>
-                    <label>Nº</label>
+                    <label>CEP <span class="req">*</span></label>
+                    <div class="cep-wrap">
+                        <input type="text" id="cep" placeholder="00000-000" maxlength="9"
+                               oninput="mascaraCep(this)" onblur="buscarCep()">
+                        <div class="cep-loading" id="cep-spinner"></div>
+                    </div>
+                    <span class="input-feedback" id="fb-cep"></span>
+                </div>
+                <!-- Nº e Complemento (únicos que o usuário digita) -->
+                <div>
+                    <label>Nº <span class="req">*</span></label>
                     <input type="text" id="num" placeholder="Ex: 123">
                 </div>
-                <div>
+                <div class="full-width">
                     <label>Complemento</label>
-                    <input type="text" id="comp" placeholder="Sala, Bloco...">
+                    <input type="text" id="comp" placeholder="Sala, Bloco, Apto... (opcional)">
                 </div>
-                <div>
-                    <label>CEP</label>
-                    <input type="text" id="cep" placeholder="00000-000">
+                <!-- Preenchidos pelo ViaCEP -->
+                <div class="full-width">
+                    <label>Logradouro</label>
+                    <input type="text" id="rua" placeholder="Preenchido automaticamente pelo CEP" readonly>
                 </div>
                 <div>
                     <label>Bairro</label>
-                    <input type="text" id="bairro" placeholder="Bairro">
+                    <input type="text" id="bairro" placeholder="Preenchido automaticamente" readonly>
                 </div>
                 <div>
                     <label>Cidade</label>
-                    <input type="text" id="cid" placeholder="Cidade">
+                    <input type="text" id="cid" placeholder="Preenchida automaticamente" readonly>
                 </div>
                 <div>
                     <label>UF</label>
-                    <select id="uf">
-                        <option value="SP">SP</option>
-                        <option value="RJ">RJ</option>
-                        <option value="MG">MG</option>
-                        <option value="PR">PR</option>
-                        <option value="SC">SC</option>
-                    </select>
+                    <input type="text" id="uf" placeholder="UF" maxlength="2" readonly>
                 </div>
             </div>
 
             <div class="section-title">Contatos</div>
             <div class="grid">
                 <div class="full-width">
-                    <label>E-mail Institucional</label>
-                    <input type="email" id="email_inst" placeholder="secretaria@instituicao.com">
+                    <label>E-mail Institucional <span class="req">*</span></label>
+                    <input type="email" id="email_inst" placeholder="secretaria@escola.com.br">
                 </div>
                 <div>
-                    <label>Telefone</label>
-                    <input type="text" id="tel" placeholder="(00) 0000-0000">
+                    <label>Telefone Institucional <span class="req">*</span></label>
+                    <input type="text" id="tel" placeholder="(00) 0000-0000" maxlength="15"
+                           oninput="mascaraTelefone(this)">
                 </div>
                 <div>
-                    <label>Telefone/Fax</label>
-                    <input type="text" id="fax" placeholder="(00) 0000-0000">
+                    <label>Telefone / Fax</label>
+                    <input type="text" id="fax" placeholder="(00) 0000-0000" maxlength="15"
+                           oninput="mascaraTelefone(this)">
                 </div>
             </div>
 
-            <button class="btn-action btn-next" onclick="salvarInstituicao()">PRÓXIMO PASSO</button>
+            <button class="btn-action btn-next" onclick="irParaPasso2()">PRÓXIMO PASSO →</button>
             <div id="err1" class="msg-erro"></div>
         </div>
     </div>
 
+    <!-- ======= PASSO 2: Administrador ======= -->
     <div id="passo2" class="step">
         <div class="card">
             <h2>Dados do Administrador</h2>
-            
+
+            <div class="steps-indicator">
+                <div class="step-dot done" id="dot1b">✓</div>
+                <span class="step-label">Instituição</span>
+                <div class="step-line done"></div>
+                <div class="step-dot current" id="dot2b">2</div>
+                <span class="step-label">Administrador</span>
+            </div>
+
             <div class="section-title">Informações Pessoais</div>
             <div class="grid">
                 <div>
-                    <label>Primeiro Nome</label>
+                    <label>Primeiro Nome <span class="req">*</span></label>
                     <input type="text" id="p_nome" placeholder="Nome">
                 </div>
                 <div>
-                    <label>Sobre Nome</label>
+                    <label>Sobrenome</label>
                     <input type="text" id="s_nome" placeholder="Sobrenome">
                 </div>
                 <div class="full-width">
                     <label>Cargo / Função</label>
-                    <input type="text" id="cargo" placeholder="Ex: Diretor, TI, Coordenador">
+                    <input type="text" id="cargo" placeholder="Ex: Diretor, Coordenador, TI">
                 </div>
                 <div class="full-width">
-                    <label>E-mail Pessoal</label>
+                    <label>E-mail Pessoal <span class="req">*</span></label>
                     <input type="email" id="email_user" placeholder="nome@provedor.com">
                 </div>
                 <div>
                     <label>Telefone Residencial</label>
-                    <input type="text" id="tel_res" placeholder="(00) 0000-0000">
+                    <input type="text" id="tel_res" placeholder="(00) 0000-0000" maxlength="15"
+                           oninput="mascaraTelefone(this)">
                 </div>
                 <div>
                     <label>Celular | WhatsApp</label>
-                    <input type="text" id="cel" placeholder="(00) 90000-0000">
+                    <input type="text" id="cel" placeholder="(00) 90000-0000" maxlength="15"
+                           oninput="mascaraTelefone(this)">
                 </div>
             </div>
 
             <div class="section-title">Acesso ao Sistema</div>
             <div class="grid">
                 <div class="full-width">
-                    <label>Usuário (Login)</label>
-                    <input type="text" id="user" placeholder="Escolha um nome de usuário único">
+                    <label>Usuário (Login) <span class="req">*</span></label>
+                    <input type="text" id="user" placeholder="Escolha um nome de usuário único (sem espaços)">
                 </div>
                 <div>
-                    <label>Senha</label>
-                    <input type="password" id="pass" placeholder="********">
+                    <label>Senha <span class="req">*</span></label>
+                    <input type="password" id="pass" placeholder="Mínimo 6 caracteres">
                 </div>
                 <div>
-                    <label>Confirmar Senha</label>
-                    <input type="password" id="pass_conf" placeholder="********">
+                    <label>Confirmar Senha <span class="req">*</span></label>
+                    <input type="password" id="pass_conf" placeholder="Repita a senha">
                 </div>
             </div>
 
-            <button class="btn-action btn-finish" onclick="finalizarUsuario()">FINALIZAR CADASTRO</button>
+            <button class="btn-action btn-back" onclick="voltarParaPasso1()">← VOLTAR</button>
+            <button id="btnFinalizar" class="btn-action btn-finish" onclick="finalizarUsuario()">FINALIZAR CADASTRO</button>
             <div id="err2" class="msg-erro"></div>
         </div>
     </div>
+
 </div>
 
 <script src="js/env.php"></script>
 <script src="js/api.js"></script>
 <script>
-    let idInstituicaoGerado = null;
 
-    async function salvarInstituicao() {
-        const divErro = document.getElementById('err1');
-        divErro.style.display = 'none';
+    // ============================================================
+    // MÁSCARAS
+    // ============================================================
 
-        const dadosInst = {
-            razao_social:  document.getElementById('razao').value,
-            nome_fantasia: document.getElementById('fantasia').value,
-            cnpj:          document.getElementById('cnpj').value,
-            insc_estadual: document.getElementById('insc_est').value,
-            insc_municipal:document.getElementById('insc_mun').value,
-            cep:           document.getElementById('cep').value,
-            logradouro:    document.getElementById('rua').value,
-            numero:        document.getElementById('num').value,
-            complemento:   document.getElementById('comp').value,
-            bairro:        document.getElementById('bairro').value,
-            cidade:        document.getElementById('cid').value,
-            uf:            document.getElementById('uf').value,
-            email_contato: document.getElementById('email_inst').value,
-            telefone:      document.getElementById('tel').value,
-            fax:           document.getElementById('fax').value
-        };
-
-        const res = await chamarApi('/instituicao/registrar', 'POST', dadosInst);
-
-        if (!res.erro && res.idInstituicao) {
-            idInstituicaoGerado = res.idInstituicao;
-            document.getElementById('passo1').classList.remove('active');
-            document.getElementById('passo2').classList.add('active');
-            window.scrollTo(0,0);
-        } else {
-            divErro.innerText = "Erro: " + (res.message || "Falha na comunicação.");
-            divErro.style.display = 'block';
-        }
+    function mascaraCnpj(input) {
+        let v = input.value.replace(/\D/g, '').substring(0, 14);
+        if (v.length > 12) v = v.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{0,2})/, '$1.$2.$3/$4-$5');
+        else if (v.length > 8) v = v.replace(/^(\d{2})(\d{3})(\d{3})(\d{0,4})/,    '$1.$2.$3/$4');
+        else if (v.length > 5) v = v.replace(/^(\d{2})(\d{3})(\d{0,3})/,            '$1.$2.$3');
+        else if (v.length > 2) v = v.replace(/^(\d{2})(\d{0,3})/,                   '$1.$2');
+        input.value = v;
+        // Limpa feedback enquanto digita
+        document.getElementById('fb-cnpj').className = 'input-feedback';
     }
 
-    async function finalizarUsuario() {
-        const divErro = document.getElementById('err2');
-        divErro.style.display = 'none';
+    function mascaraCep(input) {
+        let v = input.value.replace(/\D/g, '').substring(0, 8);
+        if (v.length > 5) v = v.replace(/^(\d{5})(\d{0,3})/, '$1-$2');
+        input.value = v;
+        document.getElementById('fb-cep').className = 'input-feedback';
+    }
 
-        if(document.getElementById('pass').value !== document.getElementById('pass_conf').value) {
-            alert("As senhas não conferem!"); 
+    function mascaraTelefone(input) {
+        let v = input.value.replace(/\D/g, '').substring(0, 11);
+        if (v.length === 11)      v = v.replace(/^(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+        else if (v.length === 10) v = v.replace(/^(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+        else if (v.length > 6)    v = v.replace(/^(\d{2})(\d+)/,           '($1) $2');
+        else if (v.length > 2)    v = v.replace(/^(\d{2})(\d+)/,           '($1) $2');
+        input.value = v;
+    }
+
+    // ============================================================
+    // VALIDAÇÃO DE CNPJ (formato — aceita tudo-zero)
+    // ============================================================
+    function validarCnpj(input) {
+        const fb = document.getElementById('fb-cnpj');
+        const digitos = input.value.replace(/\D/g, '');
+
+        if (digitos.length === 0) { fb.className = 'input-feedback'; return; }
+
+        if (digitos.length !== 14) {
+            fb.textContent = 'CNPJ incompleto — deve ter 14 dígitos.';
+            fb.className = 'input-feedback erro';
             return;
         }
 
-        const dadosUser = {
-            primeiro_nome: document.getElementById('p_nome').value,
-            sobrenome:     document.getElementById('s_nome').value,
-            cargo:         document.getElementById('cargo').value,
-            email:         document.getElementById('email_user').value,
-            username:      document.getElementById('user').value,
-            senha:         document.getElementById('pass').value,
-            celular:       document.getElementById('cel').value,
-            idInstituicao: idInstituicaoGerado
-        };
+        fb.textContent = '✓ Formato válido';
+        fb.className = 'input-feedback ok';
+    }
 
-        const res = await chamarApi('/account/register', 'POST', dadosUser);
+    // ============================================================
+    // BUSCA DE CEP via ViaCEP
+    // ============================================================
+    async function buscarCep() {
+        const cepRaw = document.getElementById('cep').value.replace(/\D/g, '');
+        const fb     = document.getElementById('fb-cep');
+        const spinner = document.getElementById('cep-spinner');
 
-        if (!res.erro) {
-            localStorage.removeItem('token_unes');
-            localStorage.removeItem('user_unes');
-            alert("Cadastro realizado com sucesso!");
-            window.location.replace('login.html');
-        } else {
-            divErro.innerText = "Erro: " + (res.message || "Falha no registro.");
-            divErro.style.display = 'block';
+        if (cepRaw.length !== 8) {
+            if (cepRaw.length > 0) {
+                fb.textContent = 'CEP deve ter 8 dígitos.';
+                fb.className   = 'input-feedback erro';
+            }
+            return;
+        }
+
+        spinner.style.display = 'block';
+        fb.className = 'input-feedback';
+
+        try {
+            const res  = await fetch(`https://viacep.com.br/ws/${cepRaw}/json/`);
+            const data = await res.json();
+
+            if (data.erro) {
+                fb.textContent = 'CEP não encontrado. Verifique e tente novamente.';
+                fb.className   = 'input-feedback erro';
+                limparEndereco();
+            } else {
+                // Preenche os campos automaticamente
+                document.getElementById('rua').value   = data.logradouro || '';
+                document.getElementById('bairro').value = data.bairro    || '';
+                document.getElementById('cid').value   = data.localidade  || '';
+                document.getElementById('uf').value    = data.uf          || '';
+
+                fb.textContent = `✓ ${data.localidade} — ${data.uf}`;
+                fb.className   = 'input-feedback ok';
+
+                // Foca no campo Nº para agilizar o preenchimento
+                document.getElementById('num').focus();
+            }
+        } catch (e) {
+            fb.textContent = 'Erro ao consultar o CEP. Verifique sua conexão.';
+            fb.className   = 'input-feedback erro';
+        } finally {
+            spinner.style.display = 'none';
         }
     }
+
+    function limparEndereco() {
+        ['rua', 'bairro', 'cid', 'uf'].forEach(id => document.getElementById(id).value = '');
+    }
+
+    // ============================================================
+    // NAVEGAÇÃO ENTRE PASSOS
+    // ============================================================
+    let dadosInstituicao = null;
+
+    function irParaPasso2() {
+        const divErro = document.getElementById('err1');
+        divErro.style.display = 'none';
+
+        // --- Campos obrigatórios ---
+        const razao   = document.getElementById('razao').value.trim();
+        const cnpj    = document.getElementById('cnpj').value.replace(/\D/g, '');
+        const cidade  = document.getElementById('cid').value.trim();
+        const cep     = document.getElementById('cep').value.replace(/\D/g, '');
+        const num     = document.getElementById('num').value.trim();
+        const email   = document.getElementById('email_inst').value.trim();
+        const telefone = document.getElementById('tel').value.replace(/\D/g, '');
+
+        if (!razao) {
+            return mostrarErro('err1', '⚠ Razão Social é obrigatória.');
+        }
+        if (cnpj.length !== 14) {
+            return mostrarErro('err1', '⚠ CNPJ inválido — deve ter 14 dígitos.');
+        }
+        if (cep.length !== 8 || !cidade) {
+            return mostrarErro('err1', '⚠ Informe um CEP válido. O endereço será preenchido automaticamente.');
+        }
+        if (!num) {
+            return mostrarErro('err1', '⚠ O número do endereço é obrigatório.');
+        }
+        if (!email) {
+            return mostrarErro('err1', '⚠ E-mail Institucional é obrigatório.');
+        }
+        if (!validarEmail(email)) {
+            return mostrarErro('err1', '⚠ E-mail Institucional inválido.');
+        }
+        if (telefone.length < 10) {
+            return mostrarErro('err1', '⚠ Telefone Institucional é obrigatório (mínimo 10 dígitos).');
+        }
+
+        // Salva em memória — NADA é enviado ainda
+        dadosInstituicao = {
+            razao_social:   razao,
+            nome_fantasia:  document.getElementById('fantasia').value.trim() || razao,
+            cnpj:           document.getElementById('cnpj').value.trim(),
+            insc_estadual:  document.getElementById('insc_est').value.trim(),
+            insc_municipal: document.getElementById('insc_mun').value.trim(),
+            cep:            document.getElementById('cep').value.trim(),
+            logradouro:     document.getElementById('rua').value.trim(),
+            numero:         num,
+            complemento:    document.getElementById('comp').value.trim(),
+            bairro:         document.getElementById('bairro').value.trim(),
+            cidade:         cidade,
+            uf:             document.getElementById('uf').value.trim(),
+            email_contato:  email,
+            telefone:       document.getElementById('tel').value.trim(),
+            fax:            document.getElementById('fax').value.trim()
+        };
+
+        document.getElementById('passo1').classList.remove('active');
+        document.getElementById('passo2').classList.add('active');
+        window.scrollTo(0, 0);
+    }
+
+    function voltarParaPasso1() {
+        document.getElementById('err2').style.display = 'none';
+        document.getElementById('passo2').classList.remove('active');
+        document.getElementById('passo1').classList.add('active');
+        window.scrollTo(0, 0);
+    }
+
+    // ============================================================
+    // FINALIZAR — único ponto de envio à API
+    // ============================================================
+    async function finalizarUsuario() {
+        const divErro  = document.getElementById('err2');
+        const btnFinal = document.getElementById('btnFinalizar');
+        divErro.style.display = 'none';
+
+        if (!dadosInstituicao) {
+            return mostrarErro('err2', '⚠ Dados da instituição estão incompletos. Volte ao Passo 1.');
+        }
+
+        const pass     = document.getElementById('pass').value;
+        const passConf = document.getElementById('pass_conf').value;
+        const nome     = document.getElementById('p_nome').value.trim();
+        const emailU   = document.getElementById('email_user').value.trim();
+        const usuario  = document.getElementById('user').value.trim();
+
+        if (!nome)    return mostrarErro('err2', '⚠ O Primeiro Nome é obrigatório.');
+        if (!emailU || !validarEmail(emailU))
+                      return mostrarErro('err2', '⚠ Informe um e-mail pessoal válido.');
+        if (!usuario) return mostrarErro('err2', '⚠ Escolha um nome de usuário para o login.');
+        if (/\s/.test(usuario)) return mostrarErro('err2', '⚠ O usuário não pode conter espaços.');
+        if (!pass || pass.length < 6)
+                      return mostrarErro('err2', '⚠ A senha deve ter no mínimo 6 caracteres.');
+        if (pass !== passConf)
+                      return mostrarErro('err2', '⚠ As senhas não conferem.');
+
+        btnFinal.disabled = true;
+        btnFinal.textContent = 'Enviando...';
+
+        try {
+            const payload = {
+                instituicao: dadosInstituicao,
+                usuario: {
+                    primeiro_nome: nome,
+                    sobrenome:     document.getElementById('s_nome').value.trim(),
+                    cargo:         document.getElementById('cargo').value.trim(),
+                    email:         emailU,
+                    username:      usuario,
+                    senha:         pass,
+                    celular:       document.getElementById('cel').value.trim()
+                }
+            };
+
+            const res = await chamarApi('/cadastro/completo', 'POST', payload);
+
+            if (res && res.erro === false) {
+                localStorage.removeItem('token_unes');
+                localStorage.removeItem('user_unes');
+                alert('✅ ' + res.message);
+                window.location.replace('login.html');
+            } else {
+                mostrarErro('err2', res.message || 'Falha no cadastro. Tente novamente.');
+                btnFinal.disabled = false;
+                btnFinal.textContent = 'FINALIZAR CADASTRO';
+            }
+        } catch (e) {
+            console.error(e);
+            mostrarErro('err2', 'Erro de conexão com o servidor.');
+            btnFinal.disabled = false;
+            btnFinal.textContent = 'FINALIZAR CADASTRO';
+        }
+    }
+
+    // ============================================================
+    // UTILITÁRIOS
+    // ============================================================
+    function validarEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    function mostrarErro(idDiv, msg) {
+        const el = document.getElementById(idDiv);
+        el.innerText = msg;
+        el.style.display = 'block';
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    // Permite buscar CEP apertando Enter no campo
+    document.getElementById('cep').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') buscarCep();
+    });
 </script>
 </body>
 </html>

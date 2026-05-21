@@ -186,6 +186,7 @@ html, body {
 .card-warning .card-icon { background: #ffc107; } /* Amarelo Bootstrap */
 .card-primary .card-icon { background: #0d6efd; } /* Azul Bootstrap */
 .card-success .card-icon { background: #198754; } /* Verde Bootstrap */
+.card-danger .card-icon  { background: #dc3545; } /* Vermelho Bootstrap */
 .card-dark .card-icon    { background: var(--dark); }
 
 .card h3 { font-size: 22px; color: var(--primary); margin-bottom: 0; }
