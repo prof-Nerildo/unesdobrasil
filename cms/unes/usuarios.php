@@ -194,6 +194,8 @@
             </table>
         </div>
     </section>
+
+    <?php include_once '../includes/footer.php'; ?>
 </main>
 
 <!-- Modal de Criar / Editar Usuário -->

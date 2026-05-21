@@ -1,5 +1,5 @@
 <nav class="sidebar inst-bg">
-    <div class="logo">[ UNES - ESCOLA ]</div>
+    <div class="logo">[ UNES INSTITUIÇÃO ]</div>
     <ul id="menu-navegacao">
         <li><a href="dashboard.php"><i class="fas fa-home"></i> Início</a></li>
         <li><hr style="opacity: 0.1; margin: 10px 0;"></li>

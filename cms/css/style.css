@@ -204,9 +204,21 @@ html, body {
 }
 
 .main-footer {
-    padding: 20px;
-    text-align: center;
+    padding: 20px 30px;
     color: #95a5a6;
     background: var(--white);
     border-top: 1px solid rgba(0,0,0,0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
 }
+.main-footer p { margin: 0; }
+.main-footer .footer-right {
+    text-align: right;
+}
+.main-footer .footer-right p {
+    color: #95a5a6;
+    line-height: 1.4;
+}
+.footer-divisor { opacity: 0.4; }

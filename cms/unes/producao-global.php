@@ -97,6 +97,8 @@
             <div id="paginador-v2"></div>
         </div>
     </section>
+
+    <?php include_once '../includes/footer.php'; ?>
 </main>
 
 <style>

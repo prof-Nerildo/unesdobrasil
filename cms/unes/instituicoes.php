@@ -202,6 +202,7 @@ table th:hover {
             filtroAtivo = urlParams.get('filtro') || 'todos';
 
             aplicarFiltro(filtroAtivo); 
+            ordenarPor('idLegado'); // Ordem padrão ao carregar
             
         } catch (error) {
             console.error(error);
@@ -214,9 +215,9 @@ table th:hover {
         if (tipo === '3') {
             listaFiltrada = todasInstituicoes.filter(i => parseInt(i.idStatus) === 3);
         } else if (tipo === 'nao') {
-            listaFiltrada = todasInstituicoes.filter(i => i.usa_catraca === 'nao' || !i.usa_catraca);
+            listaFiltrada = todasInstituicoes.filter(i => parseInt(i.idStatus) === 2 && (i.usa_catraca === 'nao' || !i.usa_catraca));
         } else if (tipo === 'sim') {
-            listaFiltrada = todasInstituicoes.filter(i => i.usa_catraca === 'sim');
+            listaFiltrada = todasInstituicoes.filter(i => parseInt(i.idStatus) === 2 && i.usa_catraca === 'sim');
         } else {
             listaFiltrada = todasInstituicoes;
         }
@@ -235,6 +236,7 @@ table th:hover {
             });
         }
 
+        aplicarOrdenacao();
         paginaAtual = 1;
         renderizarTabela(); 
     }
@@ -359,6 +361,21 @@ function criarBotaoPag(pagina, html, ativo) {
     let ordemAscendente = true;
 let ultimaColunaSorteada = '';
 
+function aplicarOrdenacao() {
+    if (!ultimaColunaSorteada) return;
+    listaFiltrada.sort((a, b) => {
+        let valA = a[ultimaColunaSorteada] ? a[ultimaColunaSorteada].toString().toLowerCase() : '';
+        let valB = b[ultimaColunaSorteada] ? b[ultimaColunaSorteada].toString().toLowerCase() : '';
+        if (ultimaColunaSorteada === 'idLegado') {
+            valA = parseInt(a.idLegado || a.idInstituicao) || 0;
+            valB = parseInt(b.idLegado || b.idInstituicao) || 0;
+        }
+        if (valA < valB) return ordemAscendente ? -1 : 1;
+        if (valA > valB) return ordemAscendente ? 1 : -1;
+        return 0;
+    });
+}
+
 function ordenarPor(coluna) {
     // 1. Reseta todos os ícones para o estado inicial (sort neutro)
     document.querySelectorAll('th i.fas').forEach(icon => {
@@ -380,18 +397,7 @@ function ordenarPor(coluna) {
         iconeAtivo.style.opacity = '1'; // Destaca a coluna ativa
     }
 
-    // ... (sua lógica de sort que já funciona) ...
-    listaFiltrada.sort((a, b) => {
-        let valA = a[coluna] ? a[coluna].toString().toLowerCase() : '';
-        let valB = b[coluna] ? b[coluna].toString().toLowerCase() : '';
-        if (coluna === 'idLegado') {
-            valA = parseInt(a[coluna]) || 0;
-            valB = parseInt(b[coluna]) || 0;
-        }
-        if (valA < valB) return ordemAscendente ? -1 : 1;
-        if (valA > valB) return ordemAscendente ? 1 : -1;
-        return 0;
-    });
+    aplicarOrdenacao();
 
     paginaAtual = 1;
     renderizarTabela();
