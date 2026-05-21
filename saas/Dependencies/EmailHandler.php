@@ -53,8 +53,8 @@ class EmailHandler
             $this->mail->clearAddresses();
 
             // O link aponta para o arquivo que criamos no passo anterior
-            // $link = "http://localhost/unesdobrasil/cms/redefinir-senha.html?token=" . $token;
-            $link = 'http://www.webdna.com.br/unes/cms/redefinir-senha.html?token=' . $token;
+            $link = 'http://localhost/unesdobrasil/cms/redefinir-senha.html?token=' . $token;
+            // $link = 'http://www.webdna.com.br/unes/cms/redefinir-senha.html?token=' . $token;
 
             $this->mail->addAddress($emailDestino, $nomeUsuario);
             $this->mail->isHTML(true);

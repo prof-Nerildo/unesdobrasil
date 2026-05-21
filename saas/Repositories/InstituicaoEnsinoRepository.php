@@ -20,7 +20,7 @@ class InstituicaoEnsinoRepository {
             }
 
             // 1. Grava a Instituição
-            $sqlInst = "INSERT INTO instituicao (razao_social, nome_fantasia, cnpj, idStatus, dataCriacao) VALUES (?, ?, ?, 3, ?)";
+            $sqlInst = "INSERT INTO instituicao (razao_social, nome_fantasia, cnpj, idStatus, created_at) VALUES (?, ?, ?, 3, ?)";
             $stmt = $this->db->prepare($sqlInst);
             $stmt->execute([
                 $model->razao_social, 
