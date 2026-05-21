@@ -42,7 +42,7 @@
 
             <div class="form-section">
                 <h3><i class="fas fa-map-marker-alt"></i> Localização</h3>
-                <div class="grid-3 mb-3">
+                <div class="grid-4 mb-3">
                     <div class="field">
                         <label>CEP</label>
                         <div class="cep-wrap">
@@ -51,7 +51,7 @@
                         </div>
                         <span class="field-feedback" id="fb-cep"></span>
                     </div>
-                    <div class="field" style="grid-column: span 2;">
+                    <div class="field" style="grid-column: span 3;">
                         <label>Logradouro</label>
                         <input type="text" id="logradouro" placeholder="Preenchido pelo CEP" class="readonly-field" readonly>
                     </div>
@@ -190,7 +190,7 @@
 
     .field { display: flex; flex-direction: column; gap: 8px; }
     .field label { font-weight: 600; color: #555; font-size: 13px; }
-    .field input, .field select { padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; outline: none; }
+    .field input, .field select { width: 100%; box-sizing: border-box; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; outline: none; }
     .field input:focus, .field select:focus { border-color: #f39c12; box-shadow: 0 0 5px rgba(243, 156, 18, 0.2); }
 
     /* Campos preenchidos pelo ViaCEP */

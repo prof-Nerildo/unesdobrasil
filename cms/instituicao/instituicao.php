@@ -46,7 +46,7 @@
             <!-- ===== LOCALIZAÇÃO ===== -->
             <div class="form-section">
                 <h3><i class="fas fa-map-marker-alt"></i> Localização</h3>
-                <div class="grid-3 mb-3">
+                <div class="grid-4 mb-3">
                     <div class="field">
                         <label>CEP</label>
                         <div class="cep-wrap">
@@ -56,7 +56,7 @@
                         </div>
                         <span class="field-feedback" id="fb-cep"></span>
                     </div>
-                    <div class="field" style="grid-column: span 2;">
+                    <div class="field" style="grid-column: span 3;">
                         <label>Logradouro</label>
                         <input type="text" id="logradouro" readonly class="readonly-field"
                                placeholder="Preenchido automaticamente pelo CEP">
