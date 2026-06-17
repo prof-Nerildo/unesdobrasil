@@ -23,7 +23,7 @@ $c5 = $stats['entregues'] ?? 0;
         </div>
     <?php endif; ?>
 
-    <div class="card" onclick="navegarFiltroDoc('criado')" style="cursor:pointer; border-left: 5px solid #0dcaf0;">
+    <div class="card" onclick="navegarFiltroDoc('criado')" style="display:none; cursor:pointer; border-left: 5px solid #0dcaf0;">
         <div class="card-icon" style="color: #0dcaf0;"><i class="fas fa-plus-circle"></i></div>
         <div class="card-info"><h3 id="qtdCriado"><?php echo $c1; ?></h3><p>Docs. Criados</p></div>
     </div>

@@ -29,7 +29,7 @@
     .sub-titulo-dash { font-size: 13px; font-weight: 700; color: #4a5568; text-transform: uppercase; margin-bottom: 15px; padding-left: 5px; opacity: 0.8; }
     .divider-dash { border: 0; border-top: 1px solid #e2e8f0; margin: 30px 0; }
     /* Garante que o grid de 3 colunas funcione nos dois componentes */
-    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
 </style>
 
 <script>

@@ -1,7 +1,7 @@
 /**
  * producao-global.js - VERSÃO COMPLETA RECUPERADA
  */
-let todosDocumentosCache = []; 
+let todosDocumentosCache = [];
 let paginaAtual = 1;
 const itensPorPagina = 10;
 let ordemAscendente = true;
@@ -9,27 +9,30 @@ let ultimaColunaSorteada = '';
 
 // 1. Formatação de Data e Hora
 function formatarDataHoraBR(dataString) {
-    if (!dataString || dataString === '0000-00-00 00:00:00') return '--/--/---- <br> --:--';
+    if (!dataString || dataString === '0000-00-00 00:00:00') return '--/--/---- --:--:--';
     const data = new Date(dataString);
     const dia = String(data.getDate()).padStart(2, '0');
     const mes = String(data.getMonth() + 1).padStart(2, '0');
     const ano = data.getFullYear();
     const hora = String(data.getHours()).padStart(2, '0');
     const minuto = String(data.getMinutes()).padStart(2, '0');
-    return `${dia}/${mes}/${ano} <br> <small style="color: #a0aec0; font-weight: normal;">${hora}:${minuto}</small>`;
+    const seg = String(data.getSeconds()).padStart(2, '0');
+    // Sem <br>: usa flex-column via CSS para separação visual.
+    // Ao copiar para o Excel, data e hora ficam na mesma célula/linha.
+    return `<span class="celula-data"><span class="data-dt">${dia}/${mes}/${ano}</span><span class="hora-dt"> ${hora}:${minuto}:${seg}</span></span>`;
 }
 
 // 2. Carga do Dashboard (Cards do Topo)
 async function carregarDadosDashboard() {
     try {
         const res = await chamarApi('/documento/resumo-global');
-        if(!res.erro) {
+        if (!res.erro) {
             const d = res.dados;
-            if(document.getElementById('qtdCriado')) document.getElementById('qtdCriado').innerText = d.criados || 0;
-            if(document.getElementById('qtdSolicitado')) document.getElementById('qtdSolicitado').innerText = d.solicitados || 0;
-            if(document.getElementById('qtdProducao')) document.getElementById('qtdProducao').innerText = d.producao || 0;
-            if(document.getElementById('qtdProduzido')) document.getElementById('qtdProduzido').innerText = d.produzidos || 0;
-            if(document.getElementById('qtdEntregue')) document.getElementById('qtdEntregue').innerText = d.entregues || 0;
+            if (document.getElementById('qtdCriado')) document.getElementById('qtdCriado').innerText = d.criados || 0;
+            if (document.getElementById('qtdSolicitado')) document.getElementById('qtdSolicitado').innerText = d.solicitados || 0;
+            if (document.getElementById('qtdProducao')) document.getElementById('qtdProducao').innerText = d.producao || 0;
+            if (document.getElementById('qtdProduzido')) document.getElementById('qtdProduzido').innerText = d.produzidos || 0;
+            if (document.getElementById('qtdEntregue')) document.getElementById('qtdEntregue').innerText = d.entregues || 0;
         }
     } catch (e) { console.error("Erro dashboard:", e); }
 }
@@ -42,7 +45,7 @@ async function carregarProducao() {
 
     try {
         const res = await chamarApi(`/documento/producao-global/${status}`);
-        if(!res.erro && res.dados) {
+        if (!res.erro && res.dados) {
             todosDocumentosCache = res.dados;
             paginaAtual = 1;
             renderizarTabela();
@@ -89,7 +92,7 @@ function ordenarEsteira(coluna) {
 function renderizarTabela() {
     const corpo = document.getElementById('tabelaProducaoCorpo');
     const busca = document.getElementById('buscaGlobal').value.toLowerCase().trim();
-    
+
     // Atualiza ícones das setinhas
     document.querySelectorAll('th i.fas').forEach(icon => {
         const col = icon.id.replace('sort-', '');
@@ -119,10 +122,27 @@ function renderizarTabela() {
             const dAlteracao = formatarDataHoraBR(doc.dataAlteracao || doc.updated_at || doc.data_atualizacao);
             const dNasc = doc.dataNascDocumento ? doc.dataNascDocumento.split('-').reverse().join('/') : '--/--/----';
 
-            let btnAcao = "";
-            if (statusAtual === 5) btnAcao = `<button onclick="alterarStatusIndividual('${doc.idCard}', 6, 'Mover para Produção?')" class="btn-mini-acao" style="background:#4e54c8;"><i class="fas fa-tools"></i></button>`;
-            else if (statusAtual === 6) btnAcao = `<button onclick="alterarStatusIndividual('${doc.idCard}', 7, 'Marcar como Produzido?')" class="btn-mini-acao" style="background:#27ae60;"><i class="fas fa-id-card"></i></button>`;
-            else if (statusAtual === 7) btnAcao = `<button onclick="alterarStatusIndividual('${doc.idCard}', 8, 'Confirmar Entrega?')" class="btn-mini-acao" style="background:#2c3e50;"><i class="fas fa-truck"></i></button>`;
+            // Botões individuais: Voltar (status anterior) + Avançar (status seguinte)
+            let btnVoltar  = '';
+            let btnAvancar = '';
+
+            if (statusAtual === 5) {
+                // Solicitado → só avança para Em Produção
+                btnAvancar = `<button title="Mover p/ Em Produção" onclick="alterarStatusIndividual('${doc.idCard}', 6, 'Mover para Em Produção?')" class="btn-mini-acao" style="background:#4e54c8;"><i class="fas fa-tools"></i></button>`;
+            } else if (statusAtual === 6) {
+                // Em Produção → volta p/ Solicitado | avança p/ Produzido
+                btnVoltar  = `<button title="Voltar p/ Solicitados" onclick="alterarStatusIndividual('${doc.idCard}', 5, 'Voltar para Solicitados?')" class="btn-mini-acao" style="background:#ffbc00;"><i class="fas fa-arrow-left"></i></button>`;
+                btnAvancar = `<button title="Avançar p/ Produzidos" onclick="alterarStatusIndividual('${doc.idCard}', 7, 'Marcar como Produzido?')" class="btn-mini-acao" style="background:#27ae60;"><i class="fas fa-id-card"></i></button>`;
+            } else if (statusAtual === 7) {
+                // Produzido → volta p/ Em Produção | avança p/ Entregue
+                btnVoltar  = `<button title="Voltar p/ Em Produção" onclick="alterarStatusIndividual('${doc.idCard}', 6, 'Voltar para Em Produção?')" class="btn-mini-acao" style="background:#4e54c8;"><i class="fas fa-arrow-left"></i></button>`;
+                btnAvancar = `<button title="Confirmar Entrega" onclick="alterarStatusIndividual('${doc.idCard}', 8, 'Confirmar Entrega?')" class="btn-mini-acao" style="background:#2c3e50;"><i class="fas fa-truck"></i></button>`;
+            } else if (statusAtual === 8) {
+                // Entregue → só volta p/ Produzido
+                btnVoltar  = `<button title="Voltar p/ Produzidos" onclick="alterarStatusIndividual('${doc.idCard}', 7, 'Voltar para Produzidos?')" class="btn-mini-acao" style="background:#27ae60;"><i class="fas fa-arrow-left"></i></button>`;
+            }
+
+            const btnAcao = `<div class="acoes-linha">${btnVoltar}${btnAvancar}</div>`;
 
             html += `
                 <tr class="linha-aluno">
@@ -235,22 +255,34 @@ async function marcarComoEntregueLote() {
     } catch (e) { console.error(e); }
 }
 
+// 9. Avançar todos para Produzidos sem gerar lote (Em Produção)
+async function avancarTodosSemLote() {
+    if (todosDocumentosCache.length === 0) return;
+    if (!confirm(`✅ Avançar TODOS para Produzidos sem gerar lote ZIP?`)) return;
+    try {
+        await Promise.all(todosDocumentosCache.map(doc => chamarApi(`/documento/status/${doc.idCard}`, 'PUT', { novoStatus: 7 })));
+        carregarDadosDashboard(); carregarProducao();
+    } catch (e) { console.error(e); }
+}
+
 // 8. Filtros de Status (Cards)
 function setFilter(statusId) {
     document.getElementById('filtroStatus').value = statusId;
     document.querySelectorAll('.filter-card').forEach(c => c.classList.remove('active'));
     const cardAtivo = document.querySelector(`.filter-card[data-status="${statusId}"]`);
-    if(cardAtivo) cardAtivo.classList.add('active');
+    if (cardAtivo) cardAtivo.classList.add('active');
 
-    const btnMover = document.getElementById('btnMoverProducao');
-    const btnZip = document.querySelector('button[onclick="gerarLoteSelecionado()"]');
-    const btnEntregar = document.getElementById('btnFinalizarEntrega');
+    const btnMover         = document.getElementById('btnMoverProducao');
+    const btnZip           = document.getElementById('btnGerarLote');
+    const btnAvancarTodos  = document.getElementById('btnAvancarTodos');
+    const btnEntregar      = document.getElementById('btnFinalizarEntrega');
 
-    if(btnMover) btnMover.style.display = (statusId == 5) ? 'block' : 'none';
-    if(btnZip) btnZip.style.display = (statusId == 6) ? 'block' : 'none';
-    if(btnEntregar) btnEntregar.style.display = (statusId == 7) ? 'block' : 'none';
+    if (btnMover)        btnMover.style.display        = (statusId == 5) ? 'block' : 'none';
+    if (btnZip)          btnZip.style.display          = (statusId == 6) ? 'block' : 'none';
+    if (btnAvancarTodos) btnAvancarTodos.style.display = (statusId == 6) ? 'block' : 'none';
+    if (btnEntregar)     btnEntregar.style.display     = (statusId == 7) ? 'block' : 'none';
 
-    const labels = {9:'CRIADOS', 5:'SOLICITADOS', 6:'EM PRODUÇÃO', 7:'PRODUZIDOS', 8:'ENTREGUES'};
+    const labels = { 9: 'CRIADOS', 5: 'SOLICITADOS', 6: 'EM PRODUÇÃO', 7: 'PRODUZIDOS', 8: 'ENTREGUES' };
     document.getElementById('tituloStatus').innerHTML = `<i class="fas fa-list"></i> EXIBINDO: ${labels[statusId]}`;
     carregarProducao();
 }

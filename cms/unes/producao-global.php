@@ -10,7 +10,7 @@
         <div class="container-fluid" style="padding: 20px;">
             
             <div class="row-dashboard" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 30px;">
-                <div class="card-stats filter-card" data-status="9" onclick="setFilter(9)" style="border-left: 4px solid #00d2ff;">
+                <div class="card-stats filter-card" data-status="9" onclick="setFilter(9)" style="display:none; border-left: 4px solid #00d2ff;">
                     <i class="fas fa-plus-circle icon-bg"></i>
                     <div class="stat-value" id="qtdCriado">0</div>
                     <div class="stat-label">DOCS. CRIADOS</div>
@@ -40,7 +40,7 @@
             <div class="card-filter" style="padding: 15px; margin-bottom: 20px; border-radius: 8px; background: #fff; border: 1px solid #e2e8f0; display: flex; gap: 20px; align-items: center;">
                 <div style="flex: 1;">
                     <select id="filtroStatus" style="display:none;">
-                        <option value="9">Criados</option>
+                        <option value="9" style="display:none;">Criados</option>
                         <option value="5" selected>Solicitados</option>
                         <option value="6">Em Produção</option>
                         <option value="7">Produzidos</option>
@@ -66,8 +66,12 @@
                     </button>
                                         
                     
-                    <button class="btn-primary" onclick="gerarLoteSelecionado()" style="background: #27ae60; border: none; padding: 10px 20px; border-radius: 5px; color: #fff; cursor: pointer; font-weight: bold; white-space: nowrap; font-size: 12px;">
+                    <button id="btnGerarLote" onclick="gerarLoteSelecionado()" style="display:none; background: #27ae60; border: none; padding: 10px 20px; border-radius: 5px; color: #fff; cursor: pointer; font-weight: bold; white-space: nowrap; font-size: 12px;">
                         <i class="fas fa-file-archive"></i> GERAR LOTE (ZIP)
+                    </button>
+
+                    <button id="btnAvancarTodos" onclick="avancarTodosSemLote()" style="display:none; background: #00b894; border: none; padding: 10px 20px; border-radius: 5px; color: #fff; cursor: pointer; font-weight: bold; white-space: nowrap; font-size: 12px;">
+                        <i class="fas fa-forward"></i> AVANÇAR TODOS
                     </button>
                 </div>
             </div>
@@ -194,39 +198,41 @@ table th:hover i {
 }
 .btn-mini-acao:hover { transform: scale(1.1); filter: brightness(1.2); }
 
-/* 1. TRAVA A LARGURA DA TABELA */
+/* 1. LAYOUT DA TABELA */
 .table-unes {
     width: 100%;
-    table-layout: fixed; /* Força o respeito às larguras que definirmos */
+    table-layout: auto;
     border-collapse: collapse;
 }
 
-/* 2. AJUSTE INDIVIDUAL POR COLUNA */
-.table-unes th:nth-child(1), .table-unes td:nth-child(1) { width: 110px; } /* IDCARD */
-.table-unes th:nth-child(2), .table-unes td:nth-child(2) { width: auto;  } /* NOME (Cresce livre) */
-.table-unes th:nth-child(3), .table-unes td:nth-child(3) { width: 150px; } /* INST. ENSINO */
-.table-unes th:nth-child(4), .table-unes td:nth-child(4) { width: 130px; } /* CURSO */
-.table-unes th:nth-child(5), .table-unes td:nth-child(5) { width: 115px; } /* CPF */
-.table-unes th:nth-child(6), .table-unes td:nth-child(6) { width: 100px; } /* RG */
-.table-unes th:nth-child(7), .table-unes td:nth-child(7) { width: 90px;  } /* NASC. */
-.table-unes th:nth-child(8), .table-unes td:nth-child(8) { width: 65px;  } /* FOTO */
-.table-unes th:nth-child(9), .table-unes td:nth-child(9) { width: 100px; } /* SOLICIT. */
-.table-unes th:nth-child(10), .table-unes td:nth-child(10) { width: 100px; } /* ÚLT. ALT. */
-.table-unes th:nth-child(11), .table-unes td:nth-child(11) { width: 60px;  } /* AÇÃO */
+/* 2. LARGURAS MÍNIMAS POR COLUNA */
+.table-unes th:nth-child(1), .table-unes td:nth-child(1)  { min-width: 105px; width: 105px;  } /* IDCARD */
+.table-unes th:nth-child(2), .table-unes td:nth-child(2)  { min-width: 160px;               } /* NOME */
+.table-unes th:nth-child(3), .table-unes td:nth-child(3)  { min-width: 130px; width: 140px; } /* INST. ENSINO */
+.table-unes th:nth-child(4), .table-unes td:nth-child(4)  { min-width: 100px; width: 120px; } /* CURSO */
+.table-unes th:nth-child(5), .table-unes td:nth-child(5)  { min-width: 110px; width: 115px; } /* CPF */
+.table-unes th:nth-child(6), .table-unes td:nth-child(6)  { min-width:  90px; width:  95px; } /* RG */
+.table-unes th:nth-child(7), .table-unes td:nth-child(7)  { min-width:  80px; width:  85px; } /* NASC. */
+.table-unes th:nth-child(8), .table-unes td:nth-child(8)  { min-width:  60px; width:  65px; } /* FOTO */
+.table-unes th:nth-child(9), .table-unes td:nth-child(9)  { min-width: 115px; width: 120px; } /* SOLICIT. */
+.table-unes th:nth-child(10), .table-unes td:nth-child(10){ min-width: 115px; width: 120px; } /* ATUALIZ. */
+.table-unes th:nth-child(11), .table-unes td:nth-child(11){ min-width:  55px; width:  60px; } /* AÇÃO */
 
-/* 3. TRATAMENTO DE TEXTO LONGO */
+/* 3. TEXTO VISÍVEL — permite quebra de linha em todas as colunas */
 .table-unes td {
-    white-space: nowrap;      /* Não deixa o texto quebrar linha */
-    overflow: hidden;         /* Esconde o que sobrar */
-    text-overflow: ellipsis;  /* Coloca "..." se o nome da faculdade for gigante */
+    white-space: normal;
+    word-break: break-word;
+    overflow: visible;
+    text-overflow: unset;
     padding: 10px 8px;
+    vertical-align: middle;
 }
 
-/* 4. AJUSTE ESPECIAL PARA AS DATAS (PARA CABER A HORA EMBAIXO) */
-.table-unes td:nth-child(9), 
+/* 4. DATAS: mantém a data numa linha e a hora na linha de baixo */
+.table-unes td:nth-child(9),
 .table-unes td:nth-child(10) {
-    white-space: normal;      /* Deixa a data e hora quebrarem linha */
-    line-height: 1.1;
+    white-space: normal;
+    line-height: 1.4;
     font-size: 11px;
 }
 
@@ -235,6 +241,35 @@ table th:hover i {
     white-space: nowrap;
     font-size: 10px !important;
     background: #f1f5f9;
+}
+
+/* 6. DATA + HORA em coluna visual sem <br> — copia para Excel na mesma linha */
+.celula-data {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    line-height: 1.3;
+}
+.data-dt {
+    font-size: 12px;
+    font-weight: 700;
+    color: #2d3748;
+    white-space: nowrap;
+}
+.hora-dt {
+    font-size: 10px;
+    color: #a0aec0;
+    font-weight: normal;
+    white-space: nowrap;
+}
+/* 7. BOTÕES DE AÇÃO POR LINHA (Voltar + Avançar) */
+.acoes-linha {
+    display: flex;
+    gap: 5px;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: nowrap;
 }
 </style>
 
