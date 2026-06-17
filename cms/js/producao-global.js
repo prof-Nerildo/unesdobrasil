@@ -123,7 +123,7 @@ function renderizarTabela() {
             const dNasc = doc.dataNascDocumento ? doc.dataNascDocumento.split('-').reverse().join('/') : '--/--/----';
 
             // Botões individuais: Voltar (status anterior) + Avançar (status seguinte)
-            let btnVoltar  = '';
+            let btnVoltar = '';
             let btnAvancar = '';
 
             if (statusAtual === 5) {
@@ -131,15 +131,16 @@ function renderizarTabela() {
                 btnAvancar = `<button title="Mover p/ Em Produção" onclick="alterarStatusIndividual('${doc.idCard}', 6, 'Mover para Em Produção?')" class="btn-mini-acao" style="background:#4e54c8;"><i class="fas fa-tools"></i></button>`;
             } else if (statusAtual === 6) {
                 // Em Produção → volta p/ Solicitado | avança p/ Produzido
-                btnVoltar  = `<button title="Voltar p/ Solicitados" onclick="alterarStatusIndividual('${doc.idCard}', 5, 'Voltar para Solicitados?')" class="btn-mini-acao" style="background:#ffbc00;"><i class="fas fa-arrow-left"></i></button>`;
+                btnVoltar = `<button title="Voltar p/ Solicitados" onclick="alterarStatusIndividual('${doc.idCard}', 5, 'Voltar para Solicitados?')" class="btn-mini-acao" style="background:#ffbc00;"><i class="fas fa-arrow-left"></i></button>`;
                 btnAvancar = `<button title="Avançar p/ Produzidos" onclick="alterarStatusIndividual('${doc.idCard}', 7, 'Marcar como Produzido?')" class="btn-mini-acao" style="background:#27ae60;"><i class="fas fa-id-card"></i></button>`;
             } else if (statusAtual === 7) {
                 // Produzido → volta p/ Em Produção | avança p/ Entregue
-                btnVoltar  = `<button title="Voltar p/ Em Produção" onclick="alterarStatusIndividual('${doc.idCard}', 6, 'Voltar para Em Produção?')" class="btn-mini-acao" style="background:#4e54c8;"><i class="fas fa-arrow-left"></i></button>`;
+                btnVoltar = `<button title="Voltar p/ Em Produção" onclick="alterarStatusIndividual('${doc.idCard}', 6, 'Voltar para Em Produção?')" class="btn-mini-acao" style="background:#4e54c8;"><i class="fas fa-arrow-left"></i></button>`;
                 btnAvancar = `<button title="Confirmar Entrega" onclick="alterarStatusIndividual('${doc.idCard}', 8, 'Confirmar Entrega?')" class="btn-mini-acao" style="background:#2c3e50;"><i class="fas fa-truck"></i></button>`;
-            } else if (statusAtual === 8) {
-                // Entregue → só volta p/ Produzido
-                btnVoltar  = `<button title="Voltar p/ Produzidos" onclick="alterarStatusIndividual('${doc.idCard}', 7, 'Voltar para Produzidos?')" class="btn-mini-acao" style="background:#27ae60;"><i class="fas fa-arrow-left"></i></button>`;
+            }
+            else if (statusAtual === 8) {
+                // Entregue → só volta p/ Solicitado
+                btnVoltar = `<button title="Solicitar 2ª via" onclick="alterarStatusIndividual('${doc.idCard}', 5, 'Solicitar 2ª via?')" class="btn-mini-acao" style="background:#27ae60;"><i class="fas fa-id-card"></i></button>`;
             }
 
             const btnAcao = `<div class="acoes-linha">${btnVoltar}${btnAvancar}</div>`;
@@ -272,15 +273,15 @@ function setFilter(statusId) {
     const cardAtivo = document.querySelector(`.filter-card[data-status="${statusId}"]`);
     if (cardAtivo) cardAtivo.classList.add('active');
 
-    const btnMover         = document.getElementById('btnMoverProducao');
-    const btnZip           = document.getElementById('btnGerarLote');
-    const btnAvancarTodos  = document.getElementById('btnAvancarTodos');
-    const btnEntregar      = document.getElementById('btnFinalizarEntrega');
+    const btnMover = document.getElementById('btnMoverProducao');
+    const btnZip = document.getElementById('btnGerarLote');
+    const btnAvancarTodos = document.getElementById('btnAvancarTodos');
+    const btnEntregar = document.getElementById('btnFinalizarEntrega');
 
-    if (btnMover)        btnMover.style.display        = (statusId == 5) ? 'block' : 'none';
-    if (btnZip)          btnZip.style.display          = (statusId == 6) ? 'block' : 'none';
+    if (btnMover) btnMover.style.display = (statusId == 5) ? 'block' : 'none';
+    if (btnZip) btnZip.style.display = (statusId == 6) ? 'block' : 'none';
     if (btnAvancarTodos) btnAvancarTodos.style.display = (statusId == 6) ? 'block' : 'none';
-    if (btnEntregar)     btnEntregar.style.display     = (statusId == 7) ? 'block' : 'none';
+    if (btnEntregar) btnEntregar.style.display = (statusId == 7) ? 'block' : 'none';
 
     const labels = { 9: 'CRIADOS', 5: 'SOLICITADOS', 6: 'EM PRODUÇÃO', 7: 'PRODUZIDOS', 8: 'ENTREGUES' };
     document.getElementById('tituloStatus').innerHTML = `<i class="fas fa-list"></i> EXIBINDO: ${labels[statusId]}`;

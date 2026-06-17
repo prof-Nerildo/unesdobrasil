@@ -3,8 +3,23 @@ let cropper;
 let fotoFinalBase64 = "";
 let todosDocumentos = [];
 let paginaAtual = 1;
-const itensPorPagina = 10;
+let itensPorPagina = 10;
+let ordemDocAsc = true;
+let colunaDocSort = '';
 let dadosOriginaisInst = { nome: "", curso: "", podeEditarInst: "nao", podeEditarCurso: "nao" };
+
+// Data + Hora no padrão visual UNES
+function formatarDataHoraBR(dataString) {
+    if (!dataString || dataString === '0000-00-00 00:00:00') return '<span class="celula-data"><span class="data-dt">--/--/----</span><span class="hora-dt">--:--:--</span></span>';
+    const data = new Date(dataString);
+    const dia    = String(data.getDate()).padStart(2, '0');
+    const mes    = String(data.getMonth() + 1).padStart(2, '0');
+    const ano    = data.getFullYear();
+    const hora   = String(data.getHours()).padStart(2, '0');
+    const minuto = String(data.getMinutes()).padStart(2, '0');
+    const seg    = String(data.getSeconds()).padStart(2, '0');
+    return `<span class="celula-data"><span class="data-dt">${dia}/${mes}/${ano}</span><span class="hora-dt">${hora}:${minuto}:${seg}</span></span>`;
+}
 
 // VARIÁVEIS DE CONTROLE DE EDIÇÃO
 let modoEdicao = false;
@@ -66,25 +81,50 @@ async function listarDocumentosCriados() {
 }
 
 /**
- * Renderiza a tabela com Filtro e Paginação
+ * Renderiza a tabela com Filtro, Ordenação, Contador e Paginação
  */
 function renderizarTabela() {
     const corpo = document.getElementById('tabela_docs_corpo');
     const busca = document.getElementById('busca_documento').value.toLowerCase();
-    
-    let filtrados = todosDocumentos.filter(d => 
-        d.NomeDocumento.toLowerCase().includes(busca) || 
-        d.nCPF.includes(busca) || d.idCard.includes(busca)
+
+    // Atualiza ícones de ordenação
+    document.querySelectorAll('th[data-col] i.fas').forEach(icon => {
+        const col = icon.id.replace('dsort-', '');
+        if (col === colunaDocSort) {
+            icon.className = ordemDocAsc ? 'fas fa-sort-up' : 'fas fa-sort-down';
+            icon.style.opacity = '1';
+            icon.style.color = '#3182ce';
+        } else {
+            icon.className = 'fas fa-sort';
+            icon.style.opacity = '0.3';
+            icon.style.color = '#cbd5e0';
+        }
+    });
+
+    let filtrados = todosDocumentos.filter(d =>
+        (d.NomeDocumento || '').toLowerCase().includes(busca) ||
+        (d.nCPF || '').includes(busca) ||
+        (d.idCard || '').includes(busca)
     );
 
-    const totalPaginas = Math.ceil(filtrados.length / itensPorPagina);
+    const total = filtrados.length;
+    const totalPaginas = Math.ceil(total / itensPorPagina);
+    if (paginaAtual > totalPaginas) paginaAtual = 1;
     const inicio = (paginaAtual - 1) * itensPorPagina;
     const listaExibir = filtrados.slice(inicio, inicio + itensPorPagina);
 
+    // Atualiza contador
+    const contador = document.getElementById('contadorDocs');
+    if (contador) {
+        const fim = Math.min(inicio + itensPorPagina, total);
+        contador.textContent = total > 0 ? `Mostrando ${inicio + 1}–${fim} de ${total} registro(s)` : '';
+    }
+
     let html = "";
     listaExibir.forEach(d => {
-        const dNasc = d.dataNascDocumento.split('-').reverse().join('/');
-        const dCriacao = d.dataCriacao.split(' ')[0].split('-').reverse().join('/');
+        const dNasc      = d.dataNascDocumento ? d.dataNascDocumento.split('-').reverse().join('/') : '--/--/----';
+        const dCriacao   = formatarDataHoraBR(d.dataCriacao);
+        const dAlteracao = formatarDataHoraBR(d.dataAlteracao || d.updated_at || d.data_atualizacao);
         html += `
             <tr>
                 <td><strong>${d.idCard}</strong></td>
@@ -92,17 +132,18 @@ function renderizarTabela() {
                 <td>${d.InsEnsinoDocumento}</td>
                 <td>${d.serieDocumento}</td>
                 <td>${d.nCPF}</td>
-                <td>${d.nRGDocumento}</td>
+                <td>${d.nRGDocumento || '--'}</td>
                 <td>${dNasc}</td>
                 <td><img src="../../${d.fotoDocumento}" class="img-table-thumb"></td>
-                <td>${dCriacao}</td>
+                <td class="text-center">${dCriacao}</td>
+                <td class="text-center">${dAlteracao}</td>
                 <td>
                     <button class="btn-edit-table" onclick="abrirEdicaoDoc('${d.idCard}')" title="Editar"><i class="far fa-edit"></i></button>
                     <button class="btn-delete-table" onclick="excluirDoc('${d.idCard}')" title="Excluir"><i class="far fa-trash-alt"></i></button>
                 </td>
             </tr>`;
     });
-    corpo.innerHTML = html || '<tr><td colspan="10" class="text-center">Nenhum registro encontrado.</td></tr>';
+    corpo.innerHTML = html || '<tr><td colspan="11" class="text-center" style="padding:30px; color:#a0aec0;">Nenhum registro encontrado.</td></tr>';
     renderPaginacao(totalPaginas);
 }
 
@@ -110,14 +151,61 @@ function renderPaginacao(total) {
     const container = document.getElementById('paginacao_docs');
     let html = "";
     if (total <= 1) { container.innerHTML = ""; return; }
+    // Anterior
+    if (paginaAtual > 1) html += `<button class="btn-page" onclick="mudarPagina(${paginaAtual - 1})"><i class="fas fa-angle-left"></i></button>`;
     for (let i = 1; i <= total; i++) {
         html += `<button class="btn-page ${i === paginaAtual ? 'active' : ''}" onclick="mudarPagina(${i})">${i}</button>`;
     }
+    // Próxima
+    if (paginaAtual < total) html += `<button class="btn-page" onclick="mudarPagina(${paginaAtual + 1})"><i class="fas fa-angle-right"></i></button>`;
     container.innerHTML = html;
 }
 
 function mudarPagina(p) { paginaAtual = p; renderizarTabela(); }
 function filtrarDocumentos() { paginaAtual = 1; renderizarTabela(); }
+
+/**
+ * Ordenação de colunas
+ */
+function ordenarDocs(coluna) {
+    if (colunaDocSort === coluna) {
+        ordemDocAsc = !ordemDocAsc;
+    } else {
+        ordemDocAsc = true;
+        colunaDocSort = coluna;
+    }
+    todosDocumentos.sort((a, b) => {
+        let valA = a[coluna] || '';
+        let valB = b[coluna] || '';
+        // Número (idCard)
+        if (coluna === 'idCard') {
+            return ordemDocAsc ? parseInt(valA) - parseInt(valB) : parseInt(valB) - parseInt(valA);
+        }
+        // Datas (compara string ISO)
+        if (coluna === 'dataCriacao' || coluna === 'dataAlteracao' || coluna === 'dataNascDocumento') {
+            return ordemDocAsc
+                ? String(valA).localeCompare(String(valB))
+                : String(valB).localeCompare(String(valA));
+        }
+        // Texto
+        valA = valA.toString().toLowerCase();
+        valB = valB.toString().toLowerCase();
+        if (valA < valB) return ordemDocAsc ? -1 : 1;
+        if (valA > valB) return ordemDocAsc ? 1 : -1;
+        return 0;
+    });
+    paginaAtual = 1;
+    renderizarTabela();
+}
+
+/**
+ * Altera quantidade de itens por página
+ */
+function alterarItensPorPaginaDocs(valor) {
+    itensPorPagina = parseInt(valor);
+    paginaAtual = 1;
+    renderizarTabela();
+}
 
 /**
  * Limpa o formulário e reseta o Modo Edição

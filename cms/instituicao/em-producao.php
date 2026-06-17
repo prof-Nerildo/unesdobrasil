@@ -16,6 +16,20 @@
             </div>
         </div>
 
+
+        <div class="table-toolbar">
+            <div class="toolbar-left">
+                <label class="itens-label"><i class="fas fa-list-ol"></i> Exibir:</label>
+                <select id="itensPorPaginaProd" onchange="alterarItensPorPaginaProd(this.value)" class="select-itens">
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+                <span id="contadorProd" class="contador-registros"></span>
+            </div>
+        </div>
+
         <div class="card-table">
             <div class="table-header-info" style="padding: 15px; background: #f8fafc; border-bottom: 2px solid #edf2f7;">
                 <h3 id="titulo-lista" style="font-size: 11px; font-weight: 700; color: #4a5568; text-transform: uppercase;">
@@ -27,20 +41,21 @@
                 <table class="table-custom">
                     <thead>
                         <tr>
-                            <th data-col="idCard" onclick="ordenarProducao('idCard')" style="cursor:pointer">idCard <i class="fas fa-sort" data-sort="idCard" style="opacity:0.3"></i></th>
-                            <th data-col="NomeDocumento" onclick="ordenarProducao('NomeDocumento')" style="cursor:pointer">NOME COMPLETO <i class="fas fa-sort" data-sort="NomeDocumento" style="opacity:0.3"></i></th>
-                            <th>INST. ENSINO</th>
-                            <th>SÉRIE/CURSO</th>
-                            <th>CPF</th>
-                            <th>RG/ IDENTIDADE</th>
-                            <th>DATA NASC.</th>
+                            <th data-col="idCard" onclick="ordenarProducao('idCard')" style="cursor:pointer;white-space:nowrap;">idCard <i class="fas fa-sort" id="psort-idCard" style="opacity:0.3"></i></th>
+                            <th data-col="NomeDocumento" onclick="ordenarProducao('NomeDocumento')" style="cursor:pointer;">NOME COMPLETO <i class="fas fa-sort" id="psort-NomeDocumento" style="opacity:0.3"></i></th>
+                            <th data-col="InsEnsinoDocumento" onclick="ordenarProducao('InsEnsinoDocumento')" style="cursor:pointer;">INST. ENSINO <i class="fas fa-sort" id="psort-InsEnsinoDocumento" style="opacity:0.3"></i></th>
+                            <th data-col="serieDocumento" onclick="ordenarProducao('serieDocumento')" style="cursor:pointer;">SÉRIE/CURSO <i class="fas fa-sort" id="psort-serieDocumento" style="opacity:0.3"></i></th>
+                            <th data-col="nCPF" onclick="ordenarProducao('nCPF')" style="cursor:pointer;">CPF <i class="fas fa-sort" id="psort-nCPF" style="opacity:0.3"></i></th>
+                            <th data-col="nRGDocumento" onclick="ordenarProducao('nRGDocumento')" style="cursor:pointer;">RG/ IDENTIDADE <i class="fas fa-sort" id="psort-nRGDocumento" style="opacity:0.3"></i></th>
+                            <th data-col="dataNascDocumento" onclick="ordenarProducao('dataNascDocumento')" style="cursor:pointer;white-space:nowrap;">DATA NASC. <i class="fas fa-sort" id="psort-dataNascDocumento" style="opacity:0.3"></i></th>
                             <th>FOTO</th>
-                            <th>DATA CRIAÇÃO</th>
+                            <th data-col="dataCriacao" onclick="ordenarProducao('dataCriacao')" style="cursor:pointer;white-space:nowrap;">SOLICITAÇÃO <i class="fas fa-sort" id="psort-dataCriacao" style="opacity:0.3"></i></th>
+                            <th data-col="dataAlteracao" onclick="ordenarProducao('dataAlteracao')" style="cursor:pointer;white-space:nowrap;">ATUALIZAÇÃO <i class="fas fa-sort" id="psort-dataAlteracao" style="opacity:0.3"></i></th>
                             <th>AÇÕES</th>
                         </tr>
                     </thead>
                     <tbody id="tabela_producao_corpo">
-                        <tr><td colspan="10" class="text-center" style="padding:40px; color: #a0aec0;">Aguardando seleção de status...</td></tr>
+                        <tr><td colspan="11" class="text-center" style="padding:40px; color: #a0aec0;">Aguardando seleção de status...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -95,11 +110,62 @@
     .btn-pag.active { background: #2c3e50; color: #fff; border-color: #2c3e50; box-shadow: 0 4px 10px rgba(44, 62, 80, 0.2); }
     
     /* Ordenação */
+    th[data-col] { cursor: pointer; }
     th[data-col]:hover { background-color: #f1f1f1 !important; color: #3182ce; }
-    th i { margin-left: 5px; font-size: 10px; color: #3182ce; }
+    th i { margin-left: 5px; font-size: 10px; color: #cbd5e0; }
+    th:hover i { color: #3182ce; }
+
+    /* Colunas de data: larguras fixas */
+    .table-custom th:nth-child(9),
+    .table-custom td:nth-child(9),
+    .table-custom th:nth-child(10),
+    .table-custom td:nth-child(10) { min-width: 110px; width: 120px; white-space: normal; }
+
+    /* Data + Hora em duas linhas (padrão UNES) */
+    .celula-data { display: inline-flex; flex-direction: column; align-items: center; gap: 2px; line-height: 1.3; }
+    .data-dt { font-size: 12px; font-weight: 700; color: #2d3748; white-space: nowrap; }
+    .hora-dt { font-size: 10px; color: #a0aec0; font-weight: normal; white-space: nowrap; }
+
+    /* Toolbar de itens por página */
+    .table-toolbar { display: flex; align-items: center; padding: 10px 20px 6px 0; }
+    .toolbar-left { display: flex; align-items: center; gap: 10px; }
+    .itens-label { font-size: 12px; font-weight: 700; color: #718096; text-transform: uppercase; }
+    .select-itens { padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; color: #2d3748; background: #fff; cursor: pointer; outline: none; transition: border-color 0.2s; }
+    .select-itens:focus { border-color: #1abc9c; }
+    .contador-registros { font-size: 12px; color: #a0aec0; font-weight: 600; }
+
+    /* Badge de status na coluna Ações */
+    .badge-analise {
+        display: inline-flex; align-items: center; gap: 5px;
+        background: #fff8e1; color: #f59f00;
+        font-size: 10px; font-weight: 700; text-transform: uppercase;
+        padding: 5px 10px; border-radius: 20px;
+        border: 1px solid currentColor; white-space: nowrap;
+    }
 </style>
 
 <script src="../js/env.php"></script>
 <script src="../js/producao.js"></script>
+<script>
+    // Se vier ?status=X na URL, seleciona o filtro automaticamente após carregar os cards
+    document.addEventListener('DOMContentLoaded', () => {
+        const params = new URLSearchParams(window.location.search);
+        const statusParam = params.get('status');
+
+        if (statusParam) {
+            const mapaLabel = {
+                '9': 'Docs. Criados',
+                '5': 'Solicitados',
+                '6': 'Em Produção',
+                '7': 'Produzidos'
+            };
+            // Aguarda os cards serem montados e então aplica o filtro
+            const label = mapaLabel[statusParam] || 'Documentos';
+            // carregarCardsProducao já é chamado no DOMContentLoaded do producao.js
+            // usamos um pequeno delay para garantir que os cards do container foram renderizados
+            setTimeout(() => filtrarProducao(parseInt(statusParam), label), 400);
+        }
+    });
+</script>
 
 <?php include_once '../includes/footerUnes-2.php'; ?>

@@ -128,20 +128,34 @@
             </div>
         </div>
 
+        <div class="table-toolbar">
+            <div class="toolbar-left">
+                <label class="itens-label"><i class="fas fa-list-ol"></i> Exibir:</label>
+                <select id="itensPorPaginaDocs" onchange="alterarItensPorPaginaDocs(this.value)" class="select-itens">
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+                <span id="contadorDocs" class="contador-registros"></span>
+            </div>
+        </div>
+
         <div class="card-table">
             <div class="table-responsive">
                 <table class="table-custom">
                     <thead>
                         <tr>
-                            <th>idCard</th>
-                            <th>NOME COMPLETO</th>
-                            <th>INST. ENSINO</th>
-                            <th>SÉRIE/CURSO</th>
-                            <th>CPF</th>
-                            <th>RG/ IDENTIDADE</th>
-                            <th>DATA NASC.</th>
+                            <th data-col="idCard" onclick="ordenarDocs('idCard')" style="cursor:pointer;white-space:nowrap;">idCard <i class="fas fa-sort" id="dsort-idCard" style="opacity:0.3"></i></th>
+                            <th data-col="NomeDocumento" onclick="ordenarDocs('NomeDocumento')" style="cursor:pointer;">NOME COMPLETO <i class="fas fa-sort" id="dsort-NomeDocumento" style="opacity:0.3"></i></th>
+                            <th data-col="InsEnsinoDocumento" onclick="ordenarDocs('InsEnsinoDocumento')" style="cursor:pointer;">INST. ENSINO <i class="fas fa-sort" id="dsort-InsEnsinoDocumento" style="opacity:0.3"></i></th>
+                            <th data-col="serieDocumento" onclick="ordenarDocs('serieDocumento')" style="cursor:pointer;">SÉRIE/CURSO <i class="fas fa-sort" id="dsort-serieDocumento" style="opacity:0.3"></i></th>
+                            <th data-col="nCPF" onclick="ordenarDocs('nCPF')" style="cursor:pointer;">CPF <i class="fas fa-sort" id="dsort-nCPF" style="opacity:0.3"></i></th>
+                            <th data-col="nRGDocumento" onclick="ordenarDocs('nRGDocumento')" style="cursor:pointer;">RG/ IDENTIDADE <i class="fas fa-sort" id="dsort-nRGDocumento" style="opacity:0.3"></i></th>
+                            <th data-col="dataNascDocumento" onclick="ordenarDocs('dataNascDocumento')" style="cursor:pointer;white-space:nowrap;">DATA NASC. <i class="fas fa-sort" id="dsort-dataNascDocumento" style="opacity:0.3"></i></th>
                             <th>FOTO</th>
-                            <th>DATA CRIAÇÃO</th>
+                            <th data-col="dataCriacao" onclick="ordenarDocs('dataCriacao')" style="cursor:pointer;white-space:nowrap;">CRIAÇÃO <i class="fas fa-sort" id="dsort-dataCriacao" style="opacity:0.3"></i></th>
+                            <th data-col="dataAlteracao" onclick="ordenarDocs('dataAlteracao')" style="cursor:pointer;white-space:nowrap;">ATUALIZAÇÃO <i class="fas fa-sort" id="dsort-dataAlteracao" style="opacity:0.3"></i></th>
                             <th>AÇÕES</th>
                         </tr>
                     </thead>
@@ -246,6 +260,29 @@
 .field-search input::placeholder {
     color: #a0aec0;
 }
+
+/* Data + Hora em duas linhas (padrão UNES) */
+.celula-data { display: inline-flex; flex-direction: column; align-items: center; gap: 2px; line-height: 1.3; }
+.data-dt { font-size: 12px; font-weight: 700; color: #2d3748; white-space: nowrap; }
+.hora-dt { font-size: 10px; color: #a0aec0; font-weight: normal; white-space: nowrap; }
+
+/* Toolbar de itens por página */
+.table-toolbar { display: flex; align-items: center; justify-content: space-between; padding: 10px 20px 6px 20px; }
+.toolbar-left { display: flex; align-items: center; gap: 10px; }
+.itens-label { font-size: 12px; font-weight: 700; color: #718096; text-transform: uppercase; }
+.select-itens { padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; color: #2d3748; background: #fff; cursor: pointer; outline: none; transition: border-color 0.2s; }
+.select-itens:focus { border-color: #1abc9c; }
+.contador-registros { font-size: 12px; color: #a0aec0; font-weight: 600; }
+
+/* Ordenação colunas */
+th[data-col] { cursor: pointer; }
+th[data-col]:hover { background-color: #f1f1f1 !important; color: #3182ce; }
+.table-custom th i { margin-left: 4px; font-size: 10px; color: #cbd5e0; }
+.table-custom th:hover i { color: #3182ce; }
+
+/* Larguras das colunas de data */
+.table-custom th:nth-child(9), .table-custom td:nth-child(9),
+.table-custom th:nth-child(10), .table-custom td:nth-child(10) { min-width: 110px; width: 118px; }
 </style>
 
 <script src="../js/documento.js"></script>
